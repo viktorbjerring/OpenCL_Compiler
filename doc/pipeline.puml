@@ -1,0 +1,12 @@
+@startuml
+
+[*] --> Linter : File
+Linter --> Parser : Tokens
+Parser --> Semantic : Abstract Syntax Tree
+Semantic --> Hoisting : Typed AST
+Hoisting --> Dataflow : Dataframes
+Dataflow --> RegisterAllocation : Control Flow Graph
+RegisterAllocation --> CodeEmission : idk here actualy
+CodeEmission --> [*] : Code 
+
+@enduml
