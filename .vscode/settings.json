@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.logika": "scala",
+        "*.cmake": "cmake",
+        "iostream": "cpp"
+    }
+}

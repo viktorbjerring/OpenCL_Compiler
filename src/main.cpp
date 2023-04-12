@@ -1,5 +1,5 @@
-#include<iostream>
+#include"Compiler.hpp"
 
 int main() {
-    std::cout << "You fucking sucks!\n";
+    Linter::shit();
 }
