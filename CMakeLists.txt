@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.0.0)
+project(TigerCompiller VERSION 0.1.0)
+file(GLOB_RECURSE Sources src/*.cpp src/*.c)
+file(GLOB_RECURSE Headers src/*.hpp src/*.h)
+add_executable(${PROJECT_NAME} ${Sources})
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
