@@ -1,4 +1,4 @@
-@startuml
+@startuml sittyDiagram
 
 [*] --> Linter : File
 Linter --> Parser : Tokens
