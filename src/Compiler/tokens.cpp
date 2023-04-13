@@ -14,6 +14,8 @@ token* IntTokenCheck::findCreate(std::ifstream& stream) {
         tmp += token;
     }
     
+    stream.seekg(-1, std::ios_base::cur);
+    
     if(tmp == "") {
         return nullptr;
     }
@@ -33,6 +35,8 @@ token* StringTokenCheck::findCreate(std::ifstream& stream) {
     std::string tmp = "";
     
     while(true) {
+        stream.read(&chr, 1);
+        
         if(chr == '"') {
             break;
         }
@@ -40,5 +44,11 @@ token* StringTokenCheck::findCreate(std::ifstream& stream) {
         tmp += chr;
     }
     
+    stream.seekg(-1, std::ios_base::cur);
     return new StringToken(tmp);
+}
+
+token* IDTokenCheck::findCreate(std::ifstream& stream) {
+    // TODO: Implement this!
+    return nullptr;
 }

@@ -1,5 +1,7 @@
+#include <iostream>
 #include"Compiler.hpp"
 
 int main() {
-    Linter::shit();
+    std::cout << "This does nothing at the moment.\n";
+    return 0;
 }
