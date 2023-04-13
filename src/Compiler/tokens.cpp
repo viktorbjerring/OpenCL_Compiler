@@ -1,4 +1,5 @@
 #include "tokens.hpp"
+#include <sstream>
 
 token* IntTokenCheck::findCreate(std::ifstream& stream) {
     std::string tmp = "";
@@ -21,6 +22,12 @@ token* IntTokenCheck::findCreate(std::ifstream& stream) {
     }
     
     return new IntToken(std::atoi(tmp.c_str()));
+}
+
+std::string IntToken::ToString() const {
+    std::stringstream strStr;
+    strStr << Value;
+    return strStr.str();
 }
 
 token* StringTokenCheck::findCreate(std::ifstream& stream) {
@@ -48,7 +55,17 @@ token* StringTokenCheck::findCreate(std::ifstream& stream) {
     return new StringToken(tmp);
 }
 
+std::string StringToken::ToString() const {
+    std::stringstream strStr;
+    strStr << '"' << Value << '"';
+    return strStr.str();
+}
+
 token* IDTokenCheck::findCreate(std::ifstream& stream) {
     // TODO: Implement this!
     return nullptr;
+}
+
+std::string IDToken::ToString() const {
+    return Name;
 }
