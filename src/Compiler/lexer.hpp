@@ -18,5 +18,5 @@ class Lexer {
     
     void ReadTokens(std::ifstream stream);
     
-}
+};
 #endif /* D4304121_4EB9_43F0_A054_15BCDA82D6C3 */
