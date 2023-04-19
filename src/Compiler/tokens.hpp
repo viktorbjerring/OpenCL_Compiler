@@ -3,6 +3,7 @@
 #include <list>
 #include <cstring>
 #include <typeinfo>
+#include <iostream>
 #ifndef AB9934A9_6EA2_4A1C_A80E_78A98C4680BC
 #define AB9934A9_6EA2_4A1C_A80E_78A98C4680BC
 
@@ -30,14 +31,17 @@
         virtual std::string ToString() const override {                                     \
             return token_symbol;                                                            \
         }                                                                                   \
+        virtual std::string getToken() const override {                    \
+         return typeid(token_name##Token).name(); \
+    } \
     };                                                                                      \
     class token_name##TokenCheck : public tokenCheck {                                      \
       public:                                                                               \
         virtual token* findCreate(std::ifstream& stream) override {                         \
-            char token[sizeof(token_symbol)];                                               \
-            stream.read(token, sizeof(token_symbol));                                       \
-            if(std::strcmp(token, token_symbol)) {                                          \
-                stream.seekg(-static_cast<int>(sizeof(token_symbol)), std::ios_base::cur);  \
+            char token[sizeof(token_symbol) - 1]; \
+            int read = stream.readsome(token, sizeof(token_symbol) - 1);                                       \
+            if(read != sizeof(token_symbol) - 1 || std::strcmp(token, token_symbol)) {                                          \
+                stream.seekg(-read, std::ios_base::cur);  \
                 return nullptr;                                                             \
             }                                                                               \
             return new token_name##Token();                                                 \
@@ -46,13 +50,14 @@
 
 // Base classes
 class token {
-  public:
+public:
     virtual const std::type_info& getType() const = 0;
+    virtual std::string getToken() const = 0;
     virtual std::string ToString() const = 0;
 };
 
 class tokenCheck {
-  public:
+public:
     virtual token* findCreate(std::ifstream& stream) = 0;
 };
 
@@ -60,8 +65,9 @@ class tokenCheck {
 class IntToken : public token {
     TOKEN_CLASS(IntToken)
     int Value;
-  public:
+public:
     IntToken(int value) : Value(value) {}
+    virtual std::string getToken() const override;
     virtual std::string ToString() const override;
 };
 TOKEN_CHECK(IntToken)
@@ -69,8 +75,9 @@ TOKEN_CHECK(IntToken)
 class IDToken : public token {
     TOKEN_CLASS(IDToken)
     std::string Name;
-  public:
+public:
     IDToken(std::string name) : Name(name) {}
+    virtual std::string getToken() const override;
     virtual std::string ToString() const override;
 };
 TOKEN_CHECK(IDToken)
@@ -78,8 +85,9 @@ TOKEN_CHECK(IDToken)
 class StringToken : public token {
     TOKEN_CLASS(StringToken)
     std::string Value;
-  public:
+public:
     StringToken(std::string value) : Value(value) {}
+    virtual std::string getToken() const override;
     virtual std::string ToString() const override;
 };
 TOKEN_CHECK(StringToken)

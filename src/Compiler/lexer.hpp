@@ -8,15 +8,17 @@
 #include <typeinfo>
 #include "tokens.hpp"
 class Lexer {
-  private:
+private:
     static std::list<tokenCheck*> _tokens;
-    
+
     std::list<token*> _fileTokens;
-    
-  public:
+
+public:
     ~Lexer();
-    
-    void ReadTokens(std::ifstream stream);
-    
+
+    void ReadTokens(std::ifstream& stream);
+
+    void WriteTokens();
+
 };
 #endif /* D4304121_4EB9_43F0_A054_15BCDA82D6C3 */

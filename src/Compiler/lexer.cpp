@@ -55,22 +55,37 @@ Lexer::~Lexer() {
     }
 }
 
-void Lexer::ReadTokens(std::ifstream stream) {
+void Lexer::ReadTokens(std::ifstream& stream) {
     while(!stream.eof()) {
         bool found = false;
-        
+
+        while(std::isspace(stream.peek())) {
+            stream.get();
+        }
+
+        std::cout << (char)stream.peek() << std::endl;
+
         for(auto Checker : _tokens) {
             auto tmp = Checker->findCreate(stream);
-            
             if(tmp) {
                 _fileTokens.push_back(tmp);
                 found = true;
                 break;
             }
         }
-        
+
         if(!found) {
-            throw std::runtime_error("What the fuck are this token???!?");
+            std::cout << "token not found!! - " << std::endl;
+            return;
         }
+
+        // make sure that the file is not ended :)
+        stream.peek();
+    }
+}
+
+void Lexer::WriteTokens() {
+    for (auto token : _fileTokens) {
+        std::cout << token->getToken() << std::endl;
     }
 }
