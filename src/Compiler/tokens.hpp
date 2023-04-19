@@ -37,7 +37,7 @@
             char token[sizeof(token_symbol)];                             \
             stream.read(token, sizeof(token_symbol));                     \
             if(std::strcmp(token, token_symbol)) {                        \
-                stream.seekg(-sizeof(token_symbol), std::ios_base::cur);  \
+                stream.seekg(-static_cast<int>(sizeof(token_symbol)), std::ios_base::cur);  \
                 return nullptr;                                           \
             }                                                             \
             return new token_name##Token();                               \
@@ -82,7 +82,7 @@ class StringToken : public token {
     StringToken(std::string value) : Value(value) {}
     virtual std::string ToString() const override;
 };
-TOKEN_CHECK(StringToken, token.c_str())
+TOKEN_CHECK(StringToken)
 
 // Simple tokens
 SIMPLE_TOKEN_CLASS(Comma, ",")
