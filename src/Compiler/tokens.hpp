@@ -7,41 +7,41 @@
 #define AB9934A9_6EA2_4A1C_A80E_78A98C4680BC
 
 // Token helping macros
-#define TOKEN_CLASS(class_name)                                           \
-    public:                                                               \
-    static inline bool isType(token* toCheck) {                           \
-        return toCheck->getType() == typeid(class_name);                  \
-    }                                                                     \
-    virtual const std::type_info& getType() const override {              \
-        return typeid(class_name);                                        \
-    }                                                                     \
+#define TOKEN_CLASS(class_name)                                                             \
+    public:                                                                                 \
+    static inline bool isType(token* toCheck) {                                             \
+        return toCheck->getType() == typeid(class_name);                                    \
+    }                                                                                       \
+    virtual const std::type_info& getType() const override {                                \
+        return typeid(class_name);                                                          \
+    }                                                                                       \
     private:
 
-#define TOKEN_CHECK(token_name)                                           \
-    class token_name##Check : public tokenCheck {                         \
-      public:                                                             \
-        virtual token* findCreate(std::ifstream& stream) override;        \
+#define TOKEN_CHECK(token_name)                                                             \
+    class token_name##Check : public tokenCheck {                                           \
+      public:                                                                               \
+        virtual token* findCreate(std::ifstream& stream) override;                          \
     };
 
-#define SIMPLE_TOKEN_CLASS(token_name, token_symbol)                      \
-    class token_name##Token : public token {                              \
-        TOKEN_CLASS(token_name##Token)                                    \
-      public:                                                             \
-        virtual std::string ToString() const override {                   \
-            return token_symbol;                                          \
-        }                                                                 \
-    };                                                                    \
-    class token_name##TokenCheck : public tokenCheck {                    \
-      public:                                                             \
-        virtual token* findCreate(std::ifstream& stream) override {       \
-            char token[sizeof(token_symbol)];                             \
-            stream.read(token, sizeof(token_symbol));                     \
-            if(std::strcmp(token, token_symbol)) {                        \
+#define SIMPLE_TOKEN_CLASS(token_name, token_symbol)                                        \
+    class token_name##Token : public token {                                                \
+        TOKEN_CLASS(token_name##Token)                                                      \
+      public:                                                                               \
+        virtual std::string ToString() const override {                                     \
+            return token_symbol;                                                            \
+        }                                                                                   \
+    };                                                                                      \
+    class token_name##TokenCheck : public tokenCheck {                                      \
+      public:                                                                               \
+        virtual token* findCreate(std::ifstream& stream) override {                         \
+            char token[sizeof(token_symbol)];                                               \
+            stream.read(token, sizeof(token_symbol));                                       \
+            if(std::strcmp(token, token_symbol)) {                                          \
                 stream.seekg(-static_cast<int>(sizeof(token_symbol)), std::ios_base::cur);  \
-                return nullptr;                                           \
-            }                                                             \
-            return new token_name##Token();                               \
-        }                                                                 \
+                return nullptr;                                                             \
+            }                                                                               \
+            return new token_name##Token();                                                 \
+        }                                                                                   \
     };
 
 // Base classes
