@@ -84,7 +84,7 @@ void Lexer::ReadTokens(std::ifstream& stream) {
     }
 }
 
-void Lexer::WriteTokens() {
+void Lexer::PrintTokens() {
     for (auto token : _fileTokens) {
         std::cout << token->getToken() << std::endl;
     }

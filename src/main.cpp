@@ -1,15 +1,18 @@
 #include <iostream>
-#include"Compiler.hpp"
+#include"openCL/context.hpp"
+#include "OpenCl_compiler/parser.hpp"
 
 int main(int argc, char *argv[]) {
-    Lexer lex;
 
-    std::ifstream ifs;
-    ifs.open(argv[1]);
+    auto context = open_cl::Context::autoGenerate();
 
-    lex.ReadTokens(ifs);
+    auto adder = parser(context);
+    bool val = adder();
 
-    lex.WriteTokens();
+    std::cout << val << std::endl;
 
+    int ret = *(adder.getData());
+
+    std::cout << "value: " << ret << std::endl;
     return 0;
 }
