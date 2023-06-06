@@ -7,60 +7,77 @@
 #define CEBC928B_1EE5_4152_AAB7_A0E570249CA8
 
 class parser {
-  private:
+private:
     open_cl::Context _context;
     open_cl::Program _program;
-    
-    cl::Kernel _adder;
-    
-    int* _data;
-    
-  public:
+
+    cl::Kernel _parser;
+
+    char* _tokens;
+
+public:
     parser() = default;
     parser(open_cl::Context& context) {
         setContext(context);
-        _data = new int;
+        _tokens = new char[20];
     }
-    
+
     inline void setContext(open_cl::Context& context) {
         _context = context;
         _program = open_cl::Program(_context);
-        _program.open("parser.cl");
-        _adder = _program("parser");
+        auto ret = _program.open("parser.cl");
+        if (!ret) {
+            std::cout << "error in open" << std::endl;
+        }
+        _parser = _program("lexer");
     }
-    
-    int* getData() const {
-        return _data;
+
+    char* getData() const {
+        return _tokens;
     }
-    
+
     bool operator()() {
-        cl::Buffer mem_buffer(_context(), CL_MEM_WRITE_ONLY, sizeof(int));
-        int a = 20;
-        int b = 30;
-        _adder.setArg(0, a);
-        _adder.setArg(1, b);
-        _adder.setArg(2, mem_buffer);
-        auto ret = _context.getContextQueue().enqueueNDRangeKernel(_adder, cl::NullRange, cl::NDRange(1));
-        
+        cl::Buffer string_buffer(_context(), CL_MEM_READ_WRITE, 20 * sizeof(char));
+        cl::Buffer token_buffer(_context(), CL_MEM_READ_WRITE, 20 * sizeof(char));
+        cl::Buffer data_buffer(_context(), CL_MEM_WRITE_ONLY, 20 * sizeof(char));
+        char string[20] = "()<[]<=\0";
+
+        auto ret = _context.getContextQueue().enqueueWriteBuffer(string_buffer, CL_TRUE, 0, 20 * sizeof(char), string);
+
+        if(ret) {
+            std::cout << "write: " << ret << std::endl;
+            return false;
+        }
+
+        ret = _parser.setArg(0, string_buffer);
+        std::cout << "setarg0: " << ret << std::endl;
+        ret = _parser.setArg(1, token_buffer);
+        std::cout << "setarg1: " << ret << std::endl;
+        ret = _parser.setArg(2, data_buffer);
+        std::cout << "setarg2: " << ret << std::endl;
+
+
+        ret = _context.getContextQueue().enqueueNDRangeKernel(_parser, cl::NullRange, cl::NDRange(1));
+
         if(ret) {
             std::cout << "ndrange: " << ret << std::endl;
             return false;
         }
-        
-        ret = _context.getContextQueue().enqueueReadBuffer(mem_buffer, CL_TRUE, 0, sizeof(int), _data);
-        
+
+        ret = _context.getContextQueue().enqueueReadBuffer(token_buffer, CL_TRUE, 0, 20 * sizeof(char), _tokens);
+
         if(ret) {
             std::cout << "read: " << ret << std::endl;
             return false;
         }
-        
+
         ret = _context.getContextQueue().finish();
-        
+
         if(ret) {
             std::cout << "finish: " << ret << std::endl;
             return false;
         }
-        
+
         return true;;
     }
 };

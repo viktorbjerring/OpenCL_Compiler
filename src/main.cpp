@@ -11,8 +11,12 @@ int main(int argc, char *argv[]) {
 
     std::cout << val << std::endl;
 
-    int ret = *(adder.getData());
+    char* ret = adder.getData();
 
-    std::cout << "value: " << ret << std::endl;
+    for (int i = 0; i < 10; i++) {
+        std::cout << (int)ret[i] << ':';
+    }
+
+    std::cout << "value: "  << std::endl;
     return 0;
 }

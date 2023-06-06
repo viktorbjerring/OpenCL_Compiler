@@ -18,7 +18,7 @@ get_filename_component(filename ${file} NAME)
 
 add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 ${file}
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>/${filename})
 endforeach()
