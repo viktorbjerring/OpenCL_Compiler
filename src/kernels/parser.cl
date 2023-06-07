@@ -46,6 +46,40 @@
 #define StringToken 43
 #define IDToken 44
 
+inline uchar eatInt(volatile __global char *strPtr,
+                    volatile __global char *dataPtr) {
+  int substrIdx = 0;
+  while (strPtr[substrIdx] >= '0' && strPtr[substrIdx] <= '9') {
+    dataPtr[substrIdx] = strPtr[substrIdx];
+    substrIdx++;
+  }
+  dataPtr[substrIdx + 1] = '\0';
+  return substrIdx;
+}
+
+inline uchar eatString(volatile __global char *strPtr,
+                       volatile __global char *dataPtr) {
+  int substrIdx = 0;
+  while (strPtr[substrIdx] != '"') {
+    dataPtr[substrIdx] = strPtr[substrIdx];
+    substrIdx++;
+  }
+  dataPtr[substrIdx + 1] = '\0';
+  return substrIdx;
+}
+
+inline uchar eatID(volatile __global char *strPtr,
+                   volatile __global char *dataPtr) {
+  int substrIdx = 0;
+  while ((strPtr[substrIdx] >= 'a' && strPtr[substrIdx] <= 'z') ||
+         (strPtr[substrIdx] >= 'A' && strPtr[substrIdx] <= 'Z')) {
+    dataPtr[substrIdx] = strPtr[substrIdx];
+    substrIdx++;
+  }
+  dataPtr[substrIdx + 1] = '\0';
+  return substrIdx;
+}
+
 inline uchar checkString(volatile __global char *strPtr,
                          __constant const char *text) {
   int substrIdx = 0;
@@ -59,101 +93,84 @@ inline uchar checkString(volatile __global char *strPtr,
 }
 
 __kernel void lexer(__global char *string, __global char *tokens,
-                    __global char *data) {
+                    __global char *data, __global int *count) {
   int strIdx = 0;
   int dataIdx = 0;
   int tokIdx = 0;
   int tempIdx = 0;
   while (string[strIdx] != '\0') {
-    bool found = false;
 
-    while (string[strIdx] == ' ') {
+    if (string[strIdx] == ' ') {
       strIdx++;
+      continue;
     }
 
     switch (string[strIdx]) {
     case ',':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = CommaToken;
       strIdx++;
       break;
     case ';':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = SemicolonToken;
       strIdx++;
       break;
     case '(':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = LparenToken;
       strIdx++;
       break;
     case ')':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = RparenToken;
       strIdx++;
       break;
     case '[':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = LbrackToken;
       strIdx++;
       break;
     case ']':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = RbrackToken;
       strIdx++;
       break;
     case '{':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = LbraceToken;
       strIdx++;
       break;
     case '}':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = RbraceToken;
       strIdx++;
       break;
     case '.':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = DotToken;
       strIdx++;
       break;
     case '+':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = PlusToken;
       strIdx++;
       break;
     case '-':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = MinusToken;
       strIdx++;
       break;
     case '/':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = DivideToken;
       strIdx++;
       break;
     case '*':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = TimesToken;
       strIdx++;
       break;
     case '=':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = EqToken;
       strIdx++;
       break;
     case '&':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = AndToken;
       strIdx++;
       break;
     case '|':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = OrToken;
       strIdx++;
       break;
     case '^':
-      data[dataIdx++] = strIdx;
       tokens[tokIdx++] = CaretToken;
       strIdx++;
       break;
@@ -161,12 +178,10 @@ __kernel void lexer(__global char *string, __global char *tokens,
     case '>':
       switch (string[strIdx + 1]) {
       case '=':
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = GeToken;
         strIdx += 2;
         break;
       default:
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = GtToken;
         strIdx++;
         break;
@@ -175,17 +190,14 @@ __kernel void lexer(__global char *string, __global char *tokens,
     case '<':
       switch (string[strIdx + 1]) {
       case '=':
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = LeToken;
         strIdx += 2;
         break;
       case '>':
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = NeqToken;
         strIdx += 2;
         break;
       default:
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = LtToken;
         strIdx++;
         break;
@@ -194,12 +206,10 @@ __kernel void lexer(__global char *string, __global char *tokens,
     case ':':
       switch (string[strIdx + 1]) {
       case '=':
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = AssignToken;
         strIdx += 2;
         break;
       default:
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = ColonToken;
         strIdx++;
         break;
@@ -208,198 +218,171 @@ __kernel void lexer(__global char *string, __global char *tokens,
     case 'a':
       tempIdx = checkString((string + strIdx), "array");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = ArrayToken;
         strIdx += tempIdx;
         break;
       } else {
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
     case 'b':
       tempIdx = checkString((string + strIdx), "break");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = BreakToken;
         strIdx += tempIdx;
         break;
       } else {
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
     case 'd':
       tempIdx = checkString((string + strIdx), "do");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = DoToken;
         strIdx += tempIdx;
         break;
       } else {
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
     case 'e':
       tempIdx = checkString((string + strIdx), "else");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = ElseToken;
         strIdx += tempIdx;
         break;
       }
       tempIdx = checkString((string + strIdx), "end");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = EndToken;
         strIdx += tempIdx;
         break;
       } else {
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
     case 'f':
       tempIdx = checkString((string + strIdx), "for");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = ForToken;
         strIdx += tempIdx;
         break;
       }
       tempIdx = checkString((string + strIdx), "function");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = FunctionToken;
         strIdx += tempIdx;
         break;
       } else {
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
     case 'i':
       switch (string[strIdx + 1]) {
       case 'n':
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = InToken;
         strIdx += 2;
         break;
       case 'f':
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = IfToken;
         strIdx += 2;
         break;
       default:
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
       break;
     case 'l':
       tempIdx = checkString((string + strIdx), "let");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = LetToken;
         strIdx += tempIdx;
         break;
       } else {
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
     case 'n':
       tempIdx = checkString((string + strIdx), "nil");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = NilToken;
         strIdx += tempIdx;
         break;
       } else {
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
     case 'o':
       tempIdx = checkString((string + strIdx), "of");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = OfToken;
         strIdx += tempIdx;
         break;
       } else {
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
     case 't':
       tempIdx = checkString((string + strIdx), "then");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = ThenToken;
         strIdx += tempIdx;
         break;
       }
       tempIdx = checkString((string + strIdx), "to");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = ToToken;
         strIdx += tempIdx;
         break;
       }
       tempIdx = checkString((string + strIdx), "type");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = TypeToken;
         strIdx += tempIdx;
         break;
       } else {
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
     case 'v':
       tempIdx = checkString((string + strIdx), "var");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = VarToken;
         strIdx += tempIdx;
         break;
       } else {
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
     case 'w':
       tempIdx = checkString((string + strIdx), "while");
       if (tempIdx) {
-        data[dataIdx++] = strIdx;
         tokens[tokIdx++] = WhileToken;
         strIdx += tempIdx;
         break;
       } else {
-        data[dataIdx++] = strIdx;
-        tokens[tokIdx++] = IDToken;
-        strIdx++;
-        break;
+        goto default_label;
       }
-    default:
-      data[dataIdx++] = strIdx;
-      tokens[tokIdx++] = IDToken;
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+      tempIdx = eatInt((string + strIdx), (data + dataIdx));
+      tokens[tokIdx++] = IntToken;
+      dataIdx += tempIdx + 1;
+      strIdx += tempIdx;
+      break;
+    case '"':
       strIdx++;
+      tempIdx = eatString((string + strIdx), (data + dataIdx));
+      tokens[tokIdx++] = StringToken;
+      dataIdx += tempIdx + 1;
+      strIdx += tempIdx + 1;
+      break;
+    default:
+    default_label: // :)
+      tempIdx = eatID((string + strIdx), (data + dataIdx));
+      tokens[tokIdx++] = IDToken;
+      dataIdx += tempIdx + 1;
+      strIdx += tempIdx;
       break;
     }
   }
+  tokens[tokIdx] = 0;
+  *(count) = tokIdx;
 }

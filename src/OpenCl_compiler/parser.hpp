@@ -6,6 +6,10 @@
 #ifndef CEBC928B_1EE5_4152_AAB7_A0E570249CA8
 #define CEBC928B_1EE5_4152_AAB7_A0E570249CA8
 
+#define STRING_LENGTH 50
+#define TOKEN_BUFFER_SIZE 50
+#define DATA_BUFFER_SIZE 50
+
 class parser
 {
 private:
@@ -16,20 +20,26 @@ private:
 
     char *_tokens;
     char *_data;
+    int *_counter;
 
 public:
     parser() = default;
     parser(open_cl::Context &context)
     {
         setContext(context);
-        _tokens = new char[20];
-        _data = new char[20];
+        _tokens = new char[TOKEN_BUFFER_SIZE];
+        _data = new char[DATA_BUFFER_SIZE];
+        _counter = new int(0);
+
+        memset(_tokens, 0, TOKEN_BUFFER_SIZE);
+        memset(_data, 0, DATA_BUFFER_SIZE);
     }
 
     ~parser()
     {
         delete[] _tokens;
         delete[] _data;
+        delete[] _counter;
     }
 
     inline void setContext(open_cl::Context &context)
@@ -54,20 +64,34 @@ public:
         return _data;
     }
 
+    int *getCounter() const
+    {
+        return _counter;
+    }
+
     bool operator()()
     {
-        cl::Buffer string_buffer(_context(), CL_MEM_READ_WRITE, 20 * sizeof(char));
-        cl::Buffer token_buffer(_context(), CL_MEM_READ_WRITE, 20 * sizeof(char));
-        cl::Buffer data_buffer(_context(), CL_MEM_WRITE_ONLY, 20 * sizeof(char));
-        char *string[20];
+        cl::Buffer string_buffer(_context(), CL_MEM_READ_WRITE, STRING_LENGTH * sizeof(char));
+        cl::Buffer token_buffer(_context(), CL_MEM_READ_WRITE, TOKEN_BUFFER_SIZE * sizeof(char));
+        cl::Buffer data_buffer(_context(), CL_MEM_WRITE_ONLY, DATA_BUFFER_SIZE * sizeof(char));
+        cl::Buffer counter_buffer(_context(), CL_MEM_WRITE_ONLY, sizeof(int));
+        char testtext[STRING_LENGTH];
 
-        memset(string, 0, 20);
-        memset(_tokens, 0, 20);
-        const char testcode[] = "function () if in";
+        memset(testtext, 0, STRING_LENGTH);
+        memset(_tokens, 0, TOKEN_BUFFER_SIZE);
+        const char testcode[] = "\"suck ass \" \"numbers!\" 324 var then hello\0";
 
-        memcpy(string, testcode, strlen(testcode) + 1);
+        memcpy(testtext, testcode, strlen(testcode) + 1);
 
-        auto ret = _context.getContextQueue().enqueueWriteBuffer(string_buffer, CL_TRUE, 0, 20 * sizeof(char), string);
+        int i = 0;
+        while (testtext[i] != '\0')
+        {
+            std::cout << testtext[i++];
+        }
+
+        std::cout << std::endl;
+
+        auto ret = _context.getContextQueue().enqueueWriteBuffer(string_buffer, CL_TRUE, 0, STRING_LENGTH * sizeof(char), testtext);
 
         if (ret)
         {
@@ -75,7 +99,7 @@ public:
             return false;
         }
 
-        ret = _context.getContextQueue().enqueueFillBuffer(token_buffer, "0", 0, 20 * sizeof(char));
+        ret = _context.getContextQueue().enqueueFillBuffer(token_buffer, "0", 0, TOKEN_BUFFER_SIZE * sizeof(char));
 
         ret = _parser.setArg(0, string_buffer);
         if (ret)
@@ -96,6 +120,13 @@ public:
             return false;
         }
 
+        ret = _parser.setArg(3, counter_buffer);
+        if (ret)
+        {
+            std::cout << "setarg3: " << ret << std::endl;
+            return false;
+        }
+
         ret = _context.getContextQueue().enqueueNDRangeKernel(_parser, cl::NullRange, cl::NDRange(1));
 
         if (ret)
@@ -104,19 +135,27 @@ public:
             return false;
         }
 
-        ret = _context.getContextQueue().enqueueReadBuffer(token_buffer, CL_TRUE, 0, 20 * sizeof(char), _tokens);
+        ret = _context.getContextQueue().enqueueReadBuffer(token_buffer, CL_TRUE, 0, TOKEN_BUFFER_SIZE * sizeof(char), _tokens);
 
         if (ret)
         {
-            std::cout << "read: " << ret << std::endl;
+            std::cout << "read_tok: " << ret << std::endl;
             return false;
         }
 
-        ret = _context.getContextQueue().enqueueReadBuffer(data_buffer, CL_TRUE, 0, 20 * sizeof(char), _data);
+        ret = _context.getContextQueue().enqueueReadBuffer(data_buffer, CL_TRUE, 0, DATA_BUFFER_SIZE * sizeof(char), _data);
 
         if (ret)
         {
-            std::cout << "read: " << ret << std::endl;
+            std::cout << "read_dat: " << ret << std::endl;
+            return false;
+        }
+
+        ret = _context.getContextQueue().enqueueReadBuffer(counter_buffer, CL_TRUE, 0, sizeof(int), _counter);
+
+        if (ret)
+        {
+            std::cout << "read_cnt: " << ret << std::endl;
             return false;
         }
 
