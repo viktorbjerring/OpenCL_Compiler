@@ -25,136 +25,381 @@
 #define AssignToken 24 //":="
 // cancer
 #define ArrayToken 25    //"array"
-#define BreakToken 37    //"break"
-#define DoToken 32       //"do"
+#define BreakToken 26    //"break"
+#define DoToken 27       //"do"
 #define ElseToken 28     //"else"
-#define EndToken 35      //"end"
+#define EndToken 29      //"end"
 #define ForToken 30      //"for"
-#define FunctionToken 39 //"function"
-#define InToken 34       //"in"
-#define IfToken 26       //"if"
-#define LetToken 33      //"let"
-#define NilToken 38      //"nil"
+#define FunctionToken 31 //"function"
+#define InToken 32       //"in"
+#define IfToken 33       //"if"
+#define LetToken 34      //"let"
+#define NilToken 35      //"nil"
 #define OfToken 36       //"of"
-#define ThenToken 27     //"then"
-#define ToToken 31       //"to"
-#define TypeToken 41     //"type"
+#define ThenToken 37     //"then"
+#define ToToken 38       //"to"
+#define TypeToken 39     //"type"
 #define VarToken 40      //"var"
-#define WhileToken 29    //"while"
+#define WhileToken 41    //"while"
 // Here goes all the special tokens...
 #define IntToken 42
 #define StringToken 43
 #define IDToken 44
 
-inline bool checkString(char *strPtr, char *tokPtr, const char *text) {}
+inline uchar checkString(volatile __global char *strPtr,
+                         __constant const char *text) {
+  int substrIdx = 0;
+  while (text[substrIdx] != '\0') {
+    if (strPtr[substrIdx] != text[substrIdx]) {
+      return 0;
+    }
+    substrIdx++;
+  }
+  return substrIdx;
+}
 
 __kernel void lexer(__global char *string, __global char *tokens,
                     __global char *data) {
   int strIdx = 0;
+  int dataIdx = 0;
   int tokIdx = 0;
+  int tempIdx = 0;
   while (string[strIdx] != '\0') {
     bool found = false;
 
-    // while (string[strIdx] == ' ') {
-    //   strIdx++;
-    // }
+    while (string[strIdx] == ' ') {
+      strIdx++;
+    }
 
     switch (string[strIdx]) {
     case ',':
-      tokens[tokIdx] = CommaToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = CommaToken;
+      strIdx++;
       break;
     case ';':
-      tokens[tokIdx] = SemicolonToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = SemicolonToken;
+      strIdx++;
       break;
     case '(':
-      tokens[tokIdx] = LparenToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = LparenToken;
+      strIdx++;
       break;
     case ')':
-      tokens[tokIdx] = RparenToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = RparenToken;
+      strIdx++;
       break;
     case '[':
-      tokens[tokIdx] = LbrackToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = LbrackToken;
+      strIdx++;
       break;
     case ']':
-      tokens[tokIdx] = RbrackToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = RbrackToken;
+      strIdx++;
       break;
     case '{':
-      tokens[tokIdx] = LbraceToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = LbraceToken;
+      strIdx++;
       break;
     case '}':
-      tokens[tokIdx] = RbraceToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = RbraceToken;
+      strIdx++;
       break;
     case '.':
-      tokens[tokIdx] = DotToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = DotToken;
+      strIdx++;
       break;
     case '+':
-      tokens[tokIdx] = PlusToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = PlusToken;
+      strIdx++;
       break;
     case '-':
-      tokens[tokIdx] = MinusToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = MinusToken;
+      strIdx++;
       break;
     case '/':
-      tokens[tokIdx] = DivideToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = DivideToken;
+      strIdx++;
       break;
     case '*':
-      tokens[tokIdx] = TimesToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = TimesToken;
+      strIdx++;
       break;
     case '=':
-      tokens[tokIdx] = EqToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = EqToken;
+      strIdx++;
       break;
     case '&':
-      tokens[tokIdx] = AndToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = AndToken;
+      strIdx++;
       break;
     case '|':
-      tokens[tokIdx] = OrToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = OrToken;
+      strIdx++;
       break;
     case '^':
-      tokens[tokIdx] = CaretToken;
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = CaretToken;
+      strIdx++;
       break;
     // 2 length from here
     case '>':
       switch (string[strIdx + 1]) {
       case '=':
-        tokens[tokIdx] = GeToken;
-        strIdx++;
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = GeToken;
+        strIdx += 2;
         break;
       default:
-        tokens[tokIdx] = GtToken;
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = GtToken;
+        strIdx++;
         break;
       }
       break;
     case '<':
       switch (string[strIdx + 1]) {
       case '=':
-        tokens[tokIdx] = LeToken;
-        strIdx++;
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = LeToken;
+        strIdx += 2;
         break;
       case '>':
-        tokens[tokIdx] = NeqToken;
-        strIdx++;
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = NeqToken;
+        strIdx += 2;
         break;
       default:
-        tokens[tokIdx] = LtToken;
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = LtToken;
+        strIdx++;
         break;
       }
       break;
     case ':':
       switch (string[strIdx + 1]) {
       case '=':
-        tokens[tokIdx] = AssignToken;
-        strIdx++;
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = AssignToken;
+        strIdx += 2;
         break;
       default:
-        tokens[tokIdx] = ColonToken;
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = ColonToken;
+        strIdx++;
         break;
       }
       break;
     case 'a':
-
+      tempIdx = checkString((string + strIdx), "array");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = ArrayToken;
+        strIdx += tempIdx;
+        break;
+      } else {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
+    case 'b':
+      tempIdx = checkString((string + strIdx), "break");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = BreakToken;
+        strIdx += tempIdx;
+        break;
+      } else {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
+    case 'd':
+      tempIdx = checkString((string + strIdx), "do");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = DoToken;
+        strIdx += tempIdx;
+        break;
+      } else {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
+    case 'e':
+      tempIdx = checkString((string + strIdx), "else");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = ElseToken;
+        strIdx += tempIdx;
+        break;
+      }
+      tempIdx = checkString((string + strIdx), "end");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = EndToken;
+        strIdx += tempIdx;
+        break;
+      } else {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
+    case 'f':
+      tempIdx = checkString((string + strIdx), "for");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = ForToken;
+        strIdx += tempIdx;
+        break;
+      }
+      tempIdx = checkString((string + strIdx), "function");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = FunctionToken;
+        strIdx += tempIdx;
+        break;
+      } else {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
+    case 'i':
+      switch (string[strIdx + 1]) {
+      case 'n':
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = InToken;
+        strIdx += 2;
+        break;
+      case 'f':
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IfToken;
+        strIdx += 2;
+        break;
+      default:
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
+      break;
+    case 'l':
+      tempIdx = checkString((string + strIdx), "let");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = LetToken;
+        strIdx += tempIdx;
+        break;
+      } else {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
+    case 'n':
+      tempIdx = checkString((string + strIdx), "nil");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = NilToken;
+        strIdx += tempIdx;
+        break;
+      } else {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
+    case 'o':
+      tempIdx = checkString((string + strIdx), "of");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = OfToken;
+        strIdx += tempIdx;
+        break;
+      } else {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
+    case 't':
+      tempIdx = checkString((string + strIdx), "then");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = ThenToken;
+        strIdx += tempIdx;
+        break;
+      }
+      tempIdx = checkString((string + strIdx), "to");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = ToToken;
+        strIdx += tempIdx;
+        break;
+      }
+      tempIdx = checkString((string + strIdx), "type");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = TypeToken;
+        strIdx += tempIdx;
+        break;
+      } else {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
+    case 'v':
+      tempIdx = checkString((string + strIdx), "var");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = VarToken;
+        strIdx += tempIdx;
+        break;
+      } else {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
+    case 'w':
+      tempIdx = checkString((string + strIdx), "while");
+      if (tempIdx) {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = WhileToken;
+        strIdx += tempIdx;
+        break;
+      } else {
+        data[dataIdx++] = strIdx;
+        tokens[tokIdx++] = IDToken;
+        strIdx++;
+        break;
+      }
     default:
+      data[dataIdx++] = strIdx;
+      tokens[tokIdx++] = IDToken;
+      strIdx++;
       break;
     }
-    strIdx++;
-    tokIdx++;
   }
 }
