@@ -80,6 +80,14 @@ inline uchar eatID(volatile __global char *strPtr,
   return substrIdx;
 }
 
+inline uchar eatComment(volatile __global char *strPtr) {
+  int substrIdx = 0;
+  while (strPtr[substrIdx] != '*' || strPtr[substrIdx + 1] != '/') {
+    substrIdx++;
+  }
+  return substrIdx + 2;
+}
+
 inline uchar checkString(volatile __global char *strPtr,
                          __constant const char *text) {
   int substrIdx = 0;
@@ -89,7 +97,11 @@ inline uchar checkString(volatile __global char *strPtr,
     }
     substrIdx++;
   }
-  return substrIdx;
+  if (strPtr[substrIdx] == ' ' || strPtr[substrIdx] == '\n' ||
+      strPtr[substrIdx] == '\r' || strPtr[substrIdx] == '\t') {
+    return substrIdx;
+  }
+  return 0;
 }
 
 __kernel void lexer(__global char *string, __global char *tokens,
@@ -100,7 +112,8 @@ __kernel void lexer(__global char *string, __global char *tokens,
   int tempIdx = 0;
   while (string[strIdx] != '\0') {
 
-    if (string[strIdx] == ' ') {
+    if (string[strIdx] == ' ' || string[strIdx] == '\n' ||
+        string[strIdx] == '\r' || string[strIdx] == '\t') {
       strIdx++;
       continue;
     }
@@ -150,10 +163,6 @@ __kernel void lexer(__global char *string, __global char *tokens,
       tokens[tokIdx++] = MinusToken;
       strIdx++;
       break;
-    case '/':
-      tokens[tokIdx++] = DivideToken;
-      strIdx++;
-      break;
     case '*':
       tokens[tokIdx++] = TimesToken;
       strIdx++;
@@ -175,6 +184,17 @@ __kernel void lexer(__global char *string, __global char *tokens,
       strIdx++;
       break;
     // 2 length from here
+    case '/':
+      switch (string[strIdx + 1]) {
+      case '*':
+        strIdx += eatComment(string + strIdx + 2) + 2;
+        break;
+      default:
+        tokens[tokIdx++] = DivideToken;
+        strIdx++;
+        break;
+      }
+      break;
     case '>':
       switch (string[strIdx + 1]) {
       case '=':
@@ -273,16 +293,18 @@ __kernel void lexer(__global char *string, __global char *tokens,
         goto default_label;
       }
     case 'i':
-      switch (string[strIdx + 1]) {
-      case 'n':
+      tempIdx = checkString((string + strIdx), "in");
+      if (tempIdx) {
         tokens[tokIdx++] = InToken;
-        strIdx += 2;
+        strIdx += tempIdx;
         break;
-      case 'f':
+      }
+      tempIdx = checkString((string + strIdx), "if");
+      if (tempIdx) {
         tokens[tokIdx++] = IfToken;
-        strIdx += 2;
+        strIdx += tempIdx;
         break;
-      default:
+      } else {
         goto default_label;
       }
       break;
@@ -295,6 +317,7 @@ __kernel void lexer(__global char *string, __global char *tokens,
       } else {
         goto default_label;
       }
+      break;
     case 'n':
       tempIdx = checkString((string + strIdx), "nil");
       if (tempIdx) {

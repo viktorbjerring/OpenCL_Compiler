@@ -6,7 +6,7 @@
 #ifndef CEBC928B_1EE5_4152_AAB7_A0E570249CA8
 #define CEBC928B_1EE5_4152_AAB7_A0E570249CA8
 
-#define STRING_LENGTH 50
+#define STRING_LENGTH 500
 #define TOKEN_BUFFER_SIZE 50
 #define DATA_BUFFER_SIZE 50
 
@@ -18,6 +18,8 @@ private:
 
     cl::Kernel _parser;
 
+    char *_input;
+    int _input_len;
     char *_tokens;
     char *_data;
     int *_counter;
@@ -27,6 +29,7 @@ public:
     parser(open_cl::Context &context)
     {
         setContext(context);
+        _input = new char[STRING_LENGTH];
         _tokens = new char[TOKEN_BUFFER_SIZE];
         _data = new char[DATA_BUFFER_SIZE];
         _counter = new int(0);
@@ -54,6 +57,12 @@ public:
         _parser = _program("lexer");
     }
 
+    void setInput(const char *input, const size_t len)
+    {
+        strcpy(_input, input);
+        _input_len = len;
+    }
+
     char *getTokens() const
     {
         return _tokens;
@@ -75,23 +84,8 @@ public:
         cl::Buffer token_buffer(_context(), CL_MEM_READ_WRITE, TOKEN_BUFFER_SIZE * sizeof(char));
         cl::Buffer data_buffer(_context(), CL_MEM_WRITE_ONLY, DATA_BUFFER_SIZE * sizeof(char));
         cl::Buffer counter_buffer(_context(), CL_MEM_WRITE_ONLY, sizeof(int));
-        char testtext[STRING_LENGTH];
 
-        memset(testtext, 0, STRING_LENGTH);
-        memset(_tokens, 0, TOKEN_BUFFER_SIZE);
-        const char testcode[] = "\"suck ass \" \"numbers!\" 324 var then hello\0";
-
-        memcpy(testtext, testcode, strlen(testcode) + 1);
-
-        int i = 0;
-        while (testtext[i] != '\0')
-        {
-            std::cout << testtext[i++];
-        }
-
-        std::cout << std::endl;
-
-        auto ret = _context.getContextQueue().enqueueWriteBuffer(string_buffer, CL_TRUE, 0, STRING_LENGTH * sizeof(char), testtext);
+        auto ret = _context.getContextQueue().enqueueWriteBuffer(string_buffer, CL_TRUE, 0, STRING_LENGTH * sizeof(char), _input);
 
         if (ret)
         {
@@ -99,7 +93,8 @@ public:
             return false;
         }
 
-        ret = _context.getContextQueue().enqueueFillBuffer(token_buffer, "0", 0, TOKEN_BUFFER_SIZE * sizeof(char));
+        ret = _context.getContextQueue().enqueueFillBuffer(token_buffer, 0, 0, TOKEN_BUFFER_SIZE * sizeof(char));
+        ret = _context.getContextQueue().enqueueFillBuffer(data_buffer, 0, 0, DATA_BUFFER_SIZE * sizeof(char));
 
         ret = _parser.setArg(0, string_buffer);
         if (ret)

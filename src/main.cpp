@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include "openCL/context.hpp"
 #include "OpenCl_compiler/parser.hpp"
 
@@ -57,6 +58,31 @@ int main(int argc, char *argv[])
     auto adder = parser(context);
     int tokIdx = 0;
     int datIdx = 0;
+
+    std::string line;
+    std::string code;
+    std::ifstream codefile("../tests/simpletest.tig");
+    if (codefile.is_open())
+    {
+        while (getline(codefile, line))
+        {
+            code.append(line);
+            code += ' ';
+        }
+    }
+    else
+    {
+        return -1;
+    }
+
+    char *c_code = new char[code.length() + 1];
+
+    strcpy(c_code, code.c_str());
+
+    std::cout << c_code << std::endl;
+    std::cout << "string length" << strlen(c_code) << std::endl;
+
+    adder.setInput(c_code, strlen(c_code));
 
     bool val = adder();
 
@@ -137,11 +163,11 @@ int main(int argc, char *argv[])
     {
         if (isalnum(dat[i]))
         {
-            std::cout << dat[i];
+            std::cout << dat[i] << ':';
         }
         else
         {
-            std::cout << (int)dat[i];
+            std::cout << (int)dat[i] << ':';
         }
     }
     return 0;
