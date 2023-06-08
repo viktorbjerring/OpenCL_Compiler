@@ -105,12 +105,20 @@ inline uchar checkString(volatile __global char *strPtr,
 }
 
 __kernel void lexer(__global char *string, __global char *tokens,
-                    __global char *data, __global int *count) {
+                    __global char *data, __global int *retVal) {
   int strIdx = 0;
   int dataIdx = 0;
   int tokIdx = 0;
   int tempIdx = 0;
   while (string[strIdx] != '\0') {
+    if (strIdx > *(retVal)) {
+      *(retVal) = -1;
+      return;
+    }
+    if (dataIdx > *(retVal)) {
+      *(retVal) = -2;
+      return;
+    }
 
     if (string[strIdx] == ' ' || string[strIdx] == '\n' ||
         string[strIdx] == '\r' || string[strIdx] == '\t') {
@@ -407,5 +415,5 @@ __kernel void lexer(__global char *string, __global char *tokens,
     }
   }
   tokens[tokIdx] = 0;
-  *(count) = tokIdx;
+  *(retVal) = tokIdx;
 }

@@ -52,123 +52,103 @@ const char *const lookup_table[45] = {
 
 int main(int argc, char *argv[])
 {
-
-    auto context = open_cl::Context::autoGenerate();
-
-    auto adder = parser(context);
-    int tokIdx = 0;
-    int datIdx = 0;
-
-    std::string line;
-    std::string code;
-    std::ifstream codefile("../tests/simpletest.tig");
-    if (codefile.is_open())
+    // Check no of args
+    if (argc != 3)
     {
-        while (getline(codefile, line))
-        {
-            code.append(line);
-            code += ' ';
-        }
-    }
-    else
-    {
+        std::cout << "Please enter valid args.\nUsage: [inputfile] [outputfile]" << std::endl;
         return -1;
     }
 
-    char *c_code = new char[code.length() + 1];
-
-    strcpy(c_code, code.c_str());
-
-    std::cout << c_code << std::endl;
-    std::cout << "string length" << strlen(c_code) << std::endl;
-
-    adder.setInput(c_code, strlen(c_code));
-
-    bool val = adder();
-
-    std::cout << val << std::endl;
-
-    char *tok = adder.getTokens();
-    char *dat = adder.getData();
-    int *cnt = adder.getCounter();
-
-    std::cout << "No of tokens: " << *(cnt) << std::endl;
-
-    while (tok[tokIdx] != 0)
+    // Open input
+    std::ifstream codefile(argv[1]);
+    if (!codefile.is_open())
     {
-        switch (tok[tokIdx])
-        {
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-        case 16:
-        case 17:
-        case 18:
-        case 19:
-        case 20:
-        case 21:
-        case 22:
-        case 23:
-        case 24:
-        case 25:
-        case 26:
-        case 27:
-        case 28:
-        case 29:
-        case 30:
-        case 31:
-        case 32:
-        case 33:
-        case 34:
-        case 35:
-        case 36:
-        case 37:
-        case 38:
-        case 39:
-        case 40:
-        case 41:
-            std::cout << (int)tok[tokIdx] << ':' << lookup_table[tok[tokIdx]] << std::endl;
-            break;
-        case 42:
-        case 43:
-        case 44:
-            std::cout << (int)tok[tokIdx] << ':' << lookup_table[tok[tokIdx]] << '[';
-            while (dat[datIdx] != '\0')
-            {
-                std::cout << dat[datIdx++];
-            }
-            datIdx++;
-            std::cout << "]" << std::endl;
-            break;
-        default:
-            std::cout << (int)tok[tokIdx] << ": UNK TOKEN!" << std::endl;
-            break;
-        }
-        tokIdx++;
+        std::cout << "Error in opening input file" << std::endl;
+        return -1;
     }
 
-    for (int i = 0; i < 20; i++)
+    // Open output
+    std::ofstream lexfile(argv[2]);
+    if (!lexfile.is_open())
     {
-        if (isalnum(dat[i]))
+        std::cout << "Error in opening output file" << std::endl;
+        return -1;
+    }
+
+    // Length of input
+    codefile.seekg(0, codefile.end);
+    int inlength = codefile.tellg();
+    codefile.seekg(0, codefile.beg);
+
+    // Check length is ok
+    if (inlength >= STRING_LENGTH)
+    {
+        std::cout << "Input too long :(\nMax length: " << STRING_LENGTH << "\nCurrent length: " << inlength << std::endl;
+        return -1;
+    }
+
+    // Read input
+    char *c_code = new char[inlength];
+    codefile.read(c_code, inlength);
+
+    // Create context and kernel
+    auto context = open_cl::Context::autoGenerate();
+    auto _parser = parser(context);
+
+    // Copy string to kernel buffer
+    _parser.setInput(c_code, strlen(c_code));
+
+    // Run kernel
+    bool val = _parser();
+
+    if (!val)
+    {
+        std::cout << "Error with kernel :(" << std::endl;
+        return -1;
+    }
+
+    // Get data from kernel
+    char *tok = _parser.getTokens();
+    char *dat = _parser.getData();
+    int *ret = _parser.getRetVal();
+
+    if (*(ret) == -1)
+    {
+        std::cout << "No of tokens exceed buffer size :(" << std::endl;
+        return -1;
+    }
+    else if (*(ret) == -2)
+    {
+        std::cout << "No of data exceed buffer size :(" << std::endl;
+        return -1;
+    }
+
+    int tokIdx = 0;
+    int datIdx = 0;
+
+    // Printing loop
+    while (tok[tokIdx] != 0)
+    {
+        if (tok[tokIdx] >= 1 && tok[tokIdx] <= 44)
         {
-            std::cout << dat[i] << ':';
+            lexfile << tokIdx << ':' << lookup_table[tok[tokIdx]];
+            if (tok[tokIdx] >= 42)
+            {
+                lexfile << "[";
+                while (dat[datIdx] != '\0')
+                {
+                    lexfile << dat[datIdx++];
+                }
+                datIdx++;
+                lexfile << "]";
+            }
         }
         else
         {
-            std::cout << (int)dat[i] << ':';
+            lexfile << "UNK TOKEN: " << (int)tok[tokIdx];
         }
+        lexfile << std::endl;
+        tokIdx++;
     }
     return 0;
 }

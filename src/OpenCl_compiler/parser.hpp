@@ -6,9 +6,12 @@
 #ifndef CEBC928B_1EE5_4152_AAB7_A0E570249CA8
 #define CEBC928B_1EE5_4152_AAB7_A0E570249CA8
 
-#define STRING_LENGTH 500
-#define TOKEN_BUFFER_SIZE 50
-#define DATA_BUFFER_SIZE 50
+#define CHAR_PER_TOKEN_DATA 2
+
+#define STRING_LENGTH 5000
+
+#define TOKEN_BUFFER_SIZE STRING_LENGTH / CHAR_PER_TOKEN_DATA
+#define DATA_BUFFER_SIZE STRING_LENGTH / CHAR_PER_TOKEN_DATA
 
 class parser
 {
@@ -22,7 +25,7 @@ private:
     int _input_len;
     char *_tokens;
     char *_data;
-    int *_counter;
+    int *_retVal;
 
 public:
     parser() = default;
@@ -32,7 +35,7 @@ public:
         _input = new char[STRING_LENGTH];
         _tokens = new char[TOKEN_BUFFER_SIZE];
         _data = new char[DATA_BUFFER_SIZE];
-        _counter = new int(0);
+        _retVal = new int(TOKEN_BUFFER_SIZE);
 
         memset(_tokens, 0, TOKEN_BUFFER_SIZE);
         memset(_data, 0, DATA_BUFFER_SIZE);
@@ -42,7 +45,7 @@ public:
     {
         delete[] _tokens;
         delete[] _data;
-        delete[] _counter;
+        delete[] _retVal;
     }
 
     inline void setContext(open_cl::Context &context)
@@ -73,9 +76,9 @@ public:
         return _data;
     }
 
-    int *getCounter() const
+    int *getRetVal() const
     {
-        return _counter;
+        return _retVal;
     }
 
     bool operator()()
@@ -83,9 +86,10 @@ public:
         cl::Buffer string_buffer(_context(), CL_MEM_READ_WRITE, STRING_LENGTH * sizeof(char));
         cl::Buffer token_buffer(_context(), CL_MEM_READ_WRITE, TOKEN_BUFFER_SIZE * sizeof(char));
         cl::Buffer data_buffer(_context(), CL_MEM_WRITE_ONLY, DATA_BUFFER_SIZE * sizeof(char));
-        cl::Buffer counter_buffer(_context(), CL_MEM_WRITE_ONLY, sizeof(int));
+        cl::Buffer retVal_buffer(_context(), CL_MEM_WRITE_ONLY, sizeof(int));
 
         auto ret = _context.getContextQueue().enqueueWriteBuffer(string_buffer, CL_TRUE, 0, STRING_LENGTH * sizeof(char), _input);
+        ret = _context.getContextQueue().enqueueWriteBuffer(retVal_buffer, CL_TRUE, 0, sizeof(int), _retVal);
 
         if (ret)
         {
@@ -115,7 +119,7 @@ public:
             return false;
         }
 
-        ret = _parser.setArg(3, counter_buffer);
+        ret = _parser.setArg(3, retVal_buffer);
         if (ret)
         {
             std::cout << "setarg3: " << ret << std::endl;
@@ -146,7 +150,7 @@ public:
             return false;
         }
 
-        ret = _context.getContextQueue().enqueueReadBuffer(counter_buffer, CL_TRUE, 0, sizeof(int), _counter);
+        ret = _context.getContextQueue().enqueueReadBuffer(retVal_buffer, CL_TRUE, 0, sizeof(int), _retVal);
 
         if (ret)
         {
