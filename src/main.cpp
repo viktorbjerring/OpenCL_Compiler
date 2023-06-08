@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <chrono>
 #include "openCL/context.hpp"
 #include "OpenCl_compiler/parser.hpp"
 
@@ -53,7 +54,7 @@ const char *const lookup_table[45] = {
 int main(int argc, char *argv[])
 {
     // Check no of args
-    if (argc != 3)
+    if (argc < 3)
     {
         std::cout << "Please enter valid args.\nUsage: [inputfile] [outputfile]" << std::endl;
         return -1;
@@ -75,6 +76,8 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    auto start = std::chrono::high_resolution_clock::now();
+
     // Length of input
     codefile.seekg(0, codefile.end);
     int inlength = codefile.tellg();
@@ -87,9 +90,13 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    auto readfile = std::chrono::high_resolution_clock::now();
+
     // Read input
     char *c_code = new char[inlength];
     codefile.read(c_code, inlength);
+
+    auto createkernel = std::chrono::high_resolution_clock::now();
 
     // Create context and kernel
     auto context = open_cl::Context::autoGenerate();
@@ -98,8 +105,12 @@ int main(int argc, char *argv[])
     // Copy string to kernel buffer
     _parser.setInput(c_code, strlen(c_code));
 
+    auto prekernel = std::chrono::high_resolution_clock::now();
+
     // Run kernel
     bool val = _parser();
+
+    auto postkernel = std::chrono::high_resolution_clock::now();
 
     if (!val)
     {
@@ -107,9 +118,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // Get data from kernel
-    char *tok = _parser.getTokens();
-    char *dat = _parser.getData();
     int *ret = _parser.getRetVal();
 
     if (*(ret) == -1)
@@ -122,6 +130,12 @@ int main(int argc, char *argv[])
         std::cout << "No of data exceed buffer size :(" << std::endl;
         return -1;
     }
+
+    // Get data from kernel
+    char *tok = _parser.getTokens();
+    char *dat = _parser.getData();
+
+    auto readkernel = std::chrono::high_resolution_clock::now();
 
     int tokIdx = 0;
     int datIdx = 0;
@@ -150,5 +164,14 @@ int main(int argc, char *argv[])
         lexfile << std::endl;
         tokIdx++;
     }
+    auto writefile = std::chrono::high_resolution_clock::now();
+
+    std::cout << "Time to open file: " << std::chrono::duration_cast<std::chrono::microseconds>(readfile - start).count() << std::endl;
+    std::cout << "Time to read input: " << std::chrono::duration_cast<std::chrono::microseconds>(createkernel - readfile).count() << std::endl;
+    std::cout << "Time to create kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(prekernel - createkernel).count() << std::endl;
+    std::cout << "Time to run kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(postkernel - prekernel).count() << std::endl;
+    std::cout << "Time to read kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(readkernel - postkernel).count() << std::endl;
+    std::cout << "Time to write file: " << std::chrono::duration_cast<std::chrono::microseconds>(writefile - readkernel).count() << std::endl;
+    std::cout << "Time to execute: " << std::chrono::duration_cast<std::chrono::microseconds>(writefile - start).count() << std::endl;
     return 0;
 }

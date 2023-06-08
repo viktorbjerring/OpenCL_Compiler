@@ -32,13 +32,12 @@ public:
     parser(open_cl::Context &context)
     {
         setContext(context);
-        _input = new char[STRING_LENGTH];
         _tokens = new char[TOKEN_BUFFER_SIZE];
         _data = new char[DATA_BUFFER_SIZE];
         _retVal = new int(TOKEN_BUFFER_SIZE);
 
-        memset(_tokens, 0, TOKEN_BUFFER_SIZE);
-        memset(_data, 0, DATA_BUFFER_SIZE);
+        // memset(_tokens, 0, TOKEN_BUFFER_SIZE);
+        // memset(_data, 0, DATA_BUFFER_SIZE);
     }
 
     ~parser()
@@ -60,9 +59,9 @@ public:
         _parser = _program("lexer");
     }
 
-    void setInput(const char *input, const size_t len)
+    void setInput(char *input, const size_t len)
     {
-        strcpy(_input, input);
+        _input = input;
         _input_len = len;
     }
 
