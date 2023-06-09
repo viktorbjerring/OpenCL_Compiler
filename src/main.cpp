@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
                 lexfile << "]";
             }
         } else {
-            lexfile << "UNK TOKEN: " << (int)tok[tokIdx];
+            lexfile << "UNK TOKEN: " << +tok[tokIdx];
         }
         
         lexfile << std::endl;
