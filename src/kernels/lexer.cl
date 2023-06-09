@@ -122,6 +122,7 @@ __kernel void lexer(__global char *string, __global char *tokens,
 
     // This could potentially be moved into the main switch case, would probably
     // be more efficient.
+    // Not anymore.. Lol :)
     if (string[strIdx] <= 32 || string[strIdx] >= 127) {
       strIdx++;
       continue;

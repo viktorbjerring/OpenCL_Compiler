@@ -3,6 +3,7 @@
 #include <chrono>
 #include "openCL/context.hpp"
 #include "OpenCl_compiler/lexer.hpp"
+#include "helpers/printTime.hpp"
 
 const char* const lookup_table[45] = {
     "\0",
@@ -149,15 +150,18 @@ int main(int argc, char* argv[]) {
     }
     
     auto writefile = std::chrono::high_resolution_clock::now();
-    std::cout << "Time to open file: " << std::chrono::duration_cast<std::chrono::microseconds>(readfile - start).count() << std::endl;
-    std::cout << "Time to read input: " << std::chrono::duration_cast<std::chrono::microseconds>(createkernel - readfile).count() << std::endl;
-    std::cout << "Time to create kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(prekernel - createkernel).count() << std::endl;
-    std::cout << "Time to run entire kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(postkernel - prekernel).count() << std::endl;
-    std::cout << "Time to write to kernel: " << _lexer.getWrite() << std::endl;
-    std::cout << "Time to run kernel: " << _lexer.getExecute() << std::endl;
-    std::cout << "Time to read from kernel: " << _lexer.getRead() << std::endl;
-    std::cout << "Time to read output: " << std::chrono::duration_cast<std::chrono::microseconds>(readkernel - postkernel).count() << std::endl;
-    std::cout << "Time to write file: " << std::chrono::duration_cast<std::chrono::microseconds>(writefile - readkernel).count() << std::endl;
-    std::cout << "Time to execute: " << std::chrono::duration_cast<std::chrono::microseconds>(writefile - start).count() << std::endl;
+    std::cout << "Time to open file: " << std::chrono::duration_cast<std::chrono::microseconds>(readfile - start).count() << " microseconds" << std::endl;
+    std::cout << "Time to read input: " << std::chrono::duration_cast<std::chrono::microseconds>(createkernel - readfile).count() << " microseconds" <<  std::endl;
+    std::cout << "Time to create kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(prekernel - createkernel).count() << " microseconds" <<  std::endl;
+    std::cout << "Time to run entire kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(postkernel - prekernel).count() <<  " microseconds" << std::endl;
+    std::cout << "Time to read output: " << std::chrono::duration_cast<std::chrono::microseconds>(readkernel - postkernel).count() <<  " microseconds" << std::endl;
+    std::cout << "Time to write file: " << std::chrono::duration_cast<std::chrono::microseconds>(writefile - readkernel).count() <<  " microseconds" << std::endl;
+    std::cout << "Time to execute: " << std::chrono::duration_cast<std::chrono::microseconds>(writefile - start).count() <<  " microseconds" << std::endl;
+    cl_helper::printTime("Writing to string buffer", _lexer.getWriteStringBufEvent());
+    cl_helper::printTime("Writing to return value", _lexer.getWriteRetValEvent());
+    cl_helper::printTime("Lexer", _lexer.getRunEvent());
+    cl_helper::printTime("Reading from token buffer", _lexer.getReadTokenBufEvent());
+    cl_helper::printTime("Reading from data buffer", _lexer.getReadDataBufEvent());
+    cl_helper::printTime("Reading from return value", _lexer.getReadRetValEvent());
     return 0;
 }
