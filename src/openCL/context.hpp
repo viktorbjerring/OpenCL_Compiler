@@ -13,7 +13,7 @@ namespace open_cl {
     class Context {
       private:
         // get all platforms (drivers), e.g. NVIDIA
-        std::vector<cl::Platform> _all_platforms;
+        static std::vector<cl::Platform> _all_platforms;
         
         std::vector<cl::Device> _all_devices;
         cl::Platform _selected_platform;
@@ -22,128 +22,41 @@ namespace open_cl {
         mutable cl::CommandQueue* _cmdQueue = nullptr;
       public:
         // Rule of six because c++ likes you to add a ton of code :)
-        Context() {
-            cl::Platform::get(&_all_platforms);
-        }
-        ~Context() {
-            if(_context != nullptr) {
-                delete _context;
-            }
-            
-            if(_cmdQueue != nullptr) {
-                delete _cmdQueue;
-            }
-        }
-        Context(const Context& toCopy) {
-            _all_platforms = toCopy._all_platforms;
-            _selected_platform = toCopy._selected_platform;
-            _all_devices = toCopy._all_devices;
-            _selected_device = toCopy._selected_device;
-            
-            if(toCopy._context != nullptr) {
-                _context = new cl::Context();
-                *_context = *toCopy._context;
-            }
-        }
-        Context(Context&& toMove) {
-            _all_platforms = toMove._all_platforms;
-            _selected_platform = toMove._selected_platform;
-            _all_devices = toMove._all_devices;
-            _selected_device = toMove._selected_device;
-            _context = toMove._context;
-            toMove._context = nullptr;
-            _cmdQueue = toMove._cmdQueue;
-            toMove._cmdQueue = nullptr;
-        }
+        Context();
+        ~Context();
+        Context(const Context& toCopy);
+        Context(Context&& toMove);
+        Context& operator = (const Context& toCopy);
+        Context& operator = (Context&& toMove);
         
-        Context& operator = (const Context& toCopy) {
-            _all_platforms = toCopy._all_platforms;
-            _selected_platform = toCopy._selected_platform;
-            _all_devices = toCopy._all_devices;
-            _selected_device = toCopy._selected_device;
-            
-            if(toCopy._context != nullptr) {
-                _context = new cl::Context();
-                *_context = *toCopy._context;
-            }
-            
-            return *this;
-        }
+        static Context autoGenerate();
         
+        static size_t getPlatformCount();
         
-        Context& operator = (Context&& toMove) {
-            _all_platforms = toMove._all_platforms;
-            _selected_platform = toMove._selected_platform;
-            _all_devices = toMove._all_devices;
-            _selected_device = toMove._selected_device;
-            _context = toMove._context;
-            toMove._context = nullptr;
-            _cmdQueue = toMove._cmdQueue;
-            toMove._cmdQueue = nullptr;
-            return *this;
-        }
+        static std::vector<cl::Platform> getAllPlatforms();
+        bool selectPlatformByName(const char* name);
         
+        bool selectPlatformByName(const std::string name);
         
-        static Context autoGenerate() {
-            Context toReturn;
-            
-            if(toReturn.getPlatformCount() == 0) {
-                std::cerr << " No platforms found. Check OpenCL installation!\n";
-                return toReturn;
-            }
-            
-            toReturn.selectPlatform(0);
-            std::cout << "Using platform: " << toReturn._selected_platform.getInfo<CL_PLATFORM_NAME>() << "\n";
-            
-            if(toReturn.getDeviceCount() == 0) {
-                std::cerr << " No devices found. Check OpenCL installation!\n";
-                return toReturn;
-            }
-            
-            toReturn.selectDevice(0);
-            std::cout << "Using device: " << toReturn._selected_device.getInfo<CL_DEVICE_NAME>() << "\n";
-            return toReturn;
-        }
+        void selectPlatform(size_t index);
         
-        size_t getPlatformCount() const {
-            return _all_platforms.size();
-        }
+        size_t getDeviceCount() const;
         
-        void selectPlatform(size_t index) {
-            _selected_platform = _all_platforms[index];
-            // get default device (CPUs, GPUs) of the default platform
-            _selected_platform.getDevices(CL_DEVICE_TYPE_ALL, &_all_devices);
-        }
+        std::vector<cl::Device> getAllDevices();
         
-        size_t getDeviceCount() const {
-            return _all_devices.size();
-        }
+        void selectDevice(size_t index);
         
+        bool selectDeviceByName(const char* name);
         
-        void selectDevice(size_t index) {
-            _selected_device = _all_devices[index];
-            _context = new cl::Context({_selected_device});
-        }
+        bool selectDeviceByName(const std::string name);
         
-        cl::Device getDevice() const {
-            return _selected_device;
-        }
+        cl::Device getDevice() const;
         
-        cl::Platform getPlatform() const {
-            return _selected_platform;
-        }
+        cl::Platform getPlatform() const;
         
-        cl::Context& operator()() const {
-            return *_context;
-        }
+        cl::Context& operator()() const;
         
-        cl::CommandQueue& getContextQueue() const {
-            if(_cmdQueue == nullptr) {
-                _cmdQueue = new cl::CommandQueue(*_context, _selected_device);
-            }
-            
-            return *_cmdQueue;
-        }
+        cl::CommandQueue& getContextQueue() const;
     };
 }
 
