@@ -14,6 +14,9 @@ add_executable(${PROJECT_NAME} ${prj_hpp_files} ${prj_cpp_files})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenCL::OpenCL)
 
+#Allow to include from root
+include_directories(src)
+
 # Copy all kernals to executable folder on build.
 foreach(file IN LISTS OpenClPrograms)
 get_filename_component(filename ${file} NAME)

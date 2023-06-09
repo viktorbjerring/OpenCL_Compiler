@@ -2,7 +2,7 @@
 #include <fstream>
 #include <chrono>
 #include "openCL/context.hpp"
-#include "OpenCl_compiler/parser.hpp"
+#include "OpenCl_compiler/lexer.hpp"
 
 const char* const lookup_table[45] = {
     "\0",
@@ -95,12 +95,12 @@ int main(int argc, char* argv[]) {
     auto createkernel = std::chrono::high_resolution_clock::now();
     // Create context and kernel
     auto context = open_cl::Context::autoGenerate();
-    auto _parser = parser(context);
+    auto _lexer = lexer(context);
     // Copy string to kernel buffer
-    _parser.setInput(c_code, strlen(c_code) + 1);
+    _lexer.setInput(c_code, strlen(c_code) + 1);
     auto prekernel = std::chrono::high_resolution_clock::now();
     // Run kernel
-    bool val = _parser();
+    bool val = _lexer();
     auto postkernel = std::chrono::high_resolution_clock::now();
     
     if(!val) {
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     
-    int* ret = _parser.getRetVal();
+    int* ret = _lexer.getRetVal();
     
     if(*(ret) == -1) {
         std::cout << "No of tokens exceed buffer size :(" << std::endl;
@@ -119,8 +119,8 @@ int main(int argc, char* argv[]) {
     }
     
     // Get data from kernel
-    char* tok = _parser.getTokens();
-    char* dat = _parser.getData();
+    char* tok = _lexer.getTokens();
+    char* dat = _lexer.getData();
     auto readkernel = std::chrono::high_resolution_clock::now();
     int tokIdx = 0;
     int datIdx = 0;
@@ -153,9 +153,9 @@ int main(int argc, char* argv[]) {
     std::cout << "Time to read input: " << std::chrono::duration_cast<std::chrono::microseconds>(createkernel - readfile).count() << std::endl;
     std::cout << "Time to create kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(prekernel - createkernel).count() << std::endl;
     std::cout << "Time to run entire kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(postkernel - prekernel).count() << std::endl;
-    std::cout << "Time to write to kernel: " << _parser.getWrite() << std::endl;
-    std::cout << "Time to run kernel: " << _parser.getExecute() << std::endl;
-    std::cout << "Time to read from kernel: " << _parser.getRead() << std::endl;
+    std::cout << "Time to write to kernel: " << _lexer.getWrite() << std::endl;
+    std::cout << "Time to run kernel: " << _lexer.getExecute() << std::endl;
+    std::cout << "Time to read from kernel: " << _lexer.getRead() << std::endl;
     std::cout << "Time to read output: " << std::chrono::duration_cast<std::chrono::microseconds>(readkernel - postkernel).count() << std::endl;
     std::cout << "Time to write file: " << std::chrono::duration_cast<std::chrono::microseconds>(writefile - readkernel).count() << std::endl;
     std::cout << "Time to execute: " << std::chrono::duration_cast<std::chrono::microseconds>(writefile - start).count() << std::endl;
