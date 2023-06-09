@@ -89,25 +89,25 @@ public:
         return _retVal;
     }
 
-    int getWrite() const
+    unsigned long getWrite() const
     {
-        int start, end;
+        cl_ulong start, end;
         _writeEvent->getProfilingInfo(CL_PROFILING_COMMAND_END, &end);
         _writeEvent->getProfilingInfo(CL_PROFILING_COMMAND_START, &start);
         return end - start;
     }
 
-    int getExecute() const
+    unsigned long getExecute() const
     {
-        int start, end;
+        cl_ulong start, end;
         _runEvent->getProfilingInfo(CL_PROFILING_COMMAND_END, &end);
         _runEvent->getProfilingInfo(CL_PROFILING_COMMAND_START, &start);
         return end - start;
     }
 
-    int getRead() const
+    unsigned long getRead() const
     {
-        int start, end;
+        cl_ulong start, end;
         _readEvent->getProfilingInfo(CL_PROFILING_COMMAND_END, &end);
         _readEvent->getProfilingInfo(CL_PROFILING_COMMAND_START, &start);
         return end - start;
