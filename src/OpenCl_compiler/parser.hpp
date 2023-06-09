@@ -18,6 +18,9 @@ class parser
 private:
     open_cl::Context _context;
     open_cl::Program _program;
+    cl::Event *_writeEvent;
+    cl::Event *_runEvent;
+    cl::Event *_readEvent;
 
     cl::Kernel _parser;
 
@@ -35,6 +38,9 @@ public:
         _tokens = new char[TOKEN_BUFFER_SIZE];
         _data = new char[DATA_BUFFER_SIZE];
         _retVal = new int(TOKEN_BUFFER_SIZE);
+        _writeEvent = new cl::Event();
+        _runEvent = new cl::Event();
+        _readEvent = new cl::Event();
 
         // memset(_tokens, 0, TOKEN_BUFFER_SIZE);
         // memset(_data, 0, DATA_BUFFER_SIZE);
@@ -45,6 +51,9 @@ public:
         delete[] _tokens;
         delete[] _data;
         delete[] _retVal;
+        delete _writeEvent;
+        delete _runEvent;
+        delete _readEvent;
     }
 
     inline void setContext(open_cl::Context &context)
@@ -80,6 +89,30 @@ public:
         return _retVal;
     }
 
+    unsigned long getWrite() const
+    {
+        cl_ulong start, end;
+        _writeEvent->getProfilingInfo(CL_PROFILING_COMMAND_END, &end);
+        _writeEvent->getProfilingInfo(CL_PROFILING_COMMAND_START, &start);
+        return end - start;
+    }
+
+    unsigned long getExecute() const
+    {
+        cl_ulong start, end;
+        _runEvent->getProfilingInfo(CL_PROFILING_COMMAND_END, &end);
+        _runEvent->getProfilingInfo(CL_PROFILING_COMMAND_START, &start);
+        return end - start;
+    }
+
+    unsigned long getRead() const
+    {
+        cl_ulong start, end;
+        _readEvent->getProfilingInfo(CL_PROFILING_COMMAND_END, &end);
+        _readEvent->getProfilingInfo(CL_PROFILING_COMMAND_START, &start);
+        return end - start;
+    }
+
     bool operator()()
     {
         cl::Buffer string_buffer(_context(), CL_MEM_READ_WRITE, STRING_LENGTH * sizeof(char));
@@ -87,8 +120,8 @@ public:
         cl::Buffer data_buffer(_context(), CL_MEM_WRITE_ONLY, DATA_BUFFER_SIZE * sizeof(char));
         cl::Buffer retVal_buffer(_context(), CL_MEM_WRITE_ONLY, sizeof(int));
 
-        auto ret = _context.getContextQueue().enqueueWriteBuffer(string_buffer, CL_TRUE, 0, STRING_LENGTH * sizeof(char), _input);
-        ret = _context.getContextQueue().enqueueWriteBuffer(retVal_buffer, CL_TRUE, 0, sizeof(int), _retVal);
+        auto ret = _context.getContextQueue().enqueueWriteBuffer(string_buffer, CL_FALSE, 0, STRING_LENGTH * sizeof(char), _input, NULL, _writeEvent);
+        ret = _context.getContextQueue().enqueueWriteBuffer(retVal_buffer, CL_FALSE, 0, sizeof(int), _retVal);
 
         if (ret)
         {
@@ -96,8 +129,8 @@ public:
             return false;
         }
 
-        ret = _context.getContextQueue().enqueueFillBuffer(token_buffer, 0, 0, TOKEN_BUFFER_SIZE * sizeof(char));
-        ret = _context.getContextQueue().enqueueFillBuffer(data_buffer, 0, 0, DATA_BUFFER_SIZE * sizeof(char));
+        // ret = _context.getContextQueue().enqueueFillBuffer(token_buffer, 0, 0, TOKEN_BUFFER_SIZE * sizeof(char));
+        // ret = _context.getContextQueue().enqueueFillBuffer(data_buffer, 0, 0, DATA_BUFFER_SIZE * sizeof(char));
 
         ret = _parser.setArg(0, string_buffer);
         if (ret)
@@ -125,7 +158,8 @@ public:
             return false;
         }
 
-        ret = _context.getContextQueue().enqueueNDRangeKernel(_parser, cl::NullRange, cl::NDRange(1));
+        std::vector<cl::Event> _waitWrite = {*_writeEvent};
+        ret = _context.getContextQueue().enqueueNDRangeKernel(_parser, cl::NullRange, cl::NDRange(1), cl::NullRange, &_waitWrite, _runEvent);
 
         if (ret)
         {
@@ -133,7 +167,8 @@ public:
             return false;
         }
 
-        ret = _context.getContextQueue().enqueueReadBuffer(token_buffer, CL_TRUE, 0, TOKEN_BUFFER_SIZE * sizeof(char), _tokens);
+        std::vector<cl::Event> _waitRead = {*_runEvent};
+        ret = _context.getContextQueue().enqueueReadBuffer(token_buffer, CL_FALSE, 0, TOKEN_BUFFER_SIZE * sizeof(char), _tokens, &_waitRead, _readEvent);
 
         if (ret)
         {
@@ -141,7 +176,7 @@ public:
             return false;
         }
 
-        ret = _context.getContextQueue().enqueueReadBuffer(data_buffer, CL_TRUE, 0, DATA_BUFFER_SIZE * sizeof(char), _data);
+        ret = _context.getContextQueue().enqueueReadBuffer(data_buffer, CL_FALSE, 0, DATA_BUFFER_SIZE * sizeof(char), _data, &_waitRead);
 
         if (ret)
         {
@@ -149,7 +184,7 @@ public:
             return false;
         }
 
-        ret = _context.getContextQueue().enqueueReadBuffer(retVal_buffer, CL_TRUE, 0, sizeof(int), _retVal);
+        ret = _context.getContextQueue().enqueueReadBuffer(retVal_buffer, CL_FALSE, 0, sizeof(int), _retVal, &_waitRead);
 
         if (ret)
         {

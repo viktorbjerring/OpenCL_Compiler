@@ -169,8 +169,11 @@ int main(int argc, char *argv[])
     std::cout << "Time to open file: " << std::chrono::duration_cast<std::chrono::microseconds>(readfile - start).count() << std::endl;
     std::cout << "Time to read input: " << std::chrono::duration_cast<std::chrono::microseconds>(createkernel - readfile).count() << std::endl;
     std::cout << "Time to create kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(prekernel - createkernel).count() << std::endl;
-    std::cout << "Time to run kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(postkernel - prekernel).count() << std::endl;
-    std::cout << "Time to read kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(readkernel - postkernel).count() << std::endl;
+    std::cout << "Time to run entire kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(postkernel - prekernel).count() << std::endl;
+    std::cout << "Time to write to kernel: " << _parser.getWrite() << std::endl;
+    std::cout << "Time to run kernel: " << _parser.getExecute() << std::endl;
+    std::cout << "Time to read from kernel: " << _parser.getRead() << std::endl;
+    std::cout << "Time to read output: " << std::chrono::duration_cast<std::chrono::microseconds>(readkernel - postkernel).count() << std::endl;
     std::cout << "Time to write file: " << std::chrono::duration_cast<std::chrono::microseconds>(writefile - readkernel).count() << std::endl;
     std::cout << "Time to execute: " << std::chrono::duration_cast<std::chrono::microseconds>(writefile - start).count() << std::endl;
     return 0;
