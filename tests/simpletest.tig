@@ -38,4 +38,4 @@ let
     else if tree.value < value then containsTree( tree.left, value )
                                else containsTree( tree.right, value )
 
-  var set := tree( )
+  var set := tree ( )

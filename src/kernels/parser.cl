@@ -120,9 +120,9 @@ __kernel void lexer(__global char *string, __global char *tokens,
       return;
     }
 
-    // This could potentially be moved into the main switch case, would probably be more efficient.
-    if (string[strIdx] == ' ' || string[strIdx] == '\n' ||
-        string[strIdx] == '\r' || string[strIdx] == '\t') {
+    // This could potentially be moved into the main switch case, would probably
+    // be more efficient.
+    if (string[strIdx] <= 40 || string[strIdx] >= 127) {
       strIdx++;
       continue;
     }

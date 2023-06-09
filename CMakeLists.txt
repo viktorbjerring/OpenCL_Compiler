@@ -3,20 +3,20 @@ cmake_minimum_required(VERSION 3.1) # 3.1 << C_STANDARD 11
 project(HelloOpenCL)
 
 file(GLOB_RECURSE OpenClPrograms src/kernels/**.cl)
+file(GLOB_RECURSE prj_hpp_files src/**.hpp)
+file(GLOB_RECURSE prj_cpp_files src/**.cpp)
 
 message("${OpenClPrograms}")
 
 find_package(OpenCL REQUIRED)
 
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} ${prj_hpp_files} ${prj_cpp_files})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenCL::OpenCL)
 
 # Copy all kernals to executable folder on build.
 foreach(file IN LISTS OpenClPrograms)
 get_filename_component(filename ${file} NAME)
-
-message("hello")
 
 add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD
