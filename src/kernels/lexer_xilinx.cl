@@ -57,10 +57,10 @@ inline uchar eatInt(volatile __global char *strPtr,
     if (!(ch >= '0' && ch <= '9')) {
       break;
     }
-    tmp[substrIdx > MAX_STR_LEN ? MAX_STR_LEN - 1 : substrIdx] = ch;
+    tmp[substrIdx] = ch;
     substrIdx++;
   }
-  tmp[substrIdx] = '\0';
+  tmp[substrIdx > MAX_STR_LEN ? MAX_STR_LEN - 1 : substrIdx] = '\0';
   substrIdx = 0;
   while (substrIdx < 119) {
     dataPtr[substrIdx] = tmp[substrIdx];

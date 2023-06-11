@@ -1,0 +1,17 @@
+@startuml
+start
+:mandelbrot;
+if (Use Histogram) then (yes)
+    :generate_row_histogram;
+    :consolidate_histogram;
+    :apply_histogram_data;
+else (no)
+    :normalize_data;
+endif
+if (ColorPalette) then (basic)
+    :apply_basic_palette;
+else (lch)
+    :apply_lch_palette;
+endif
+end
+@enduml
