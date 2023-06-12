@@ -11,6 +11,7 @@ message("${OpenClPrograms}")
 find_package(OpenCL REQUIRED)
 
 add_executable(${PROJECT_NAME} ${prj_hpp_files} ${prj_cpp_files})
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenCL::OpenCL)
 
