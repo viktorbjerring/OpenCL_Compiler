@@ -1,9 +1,13 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <filesystem>
 #include "openCL/context.hpp"
-#include "OpenCl_compiler/lexer.hpp"
+#include "OpenCl_compiler/lexerMap.hpp"
 #include "helpers/printTime.hpp"
+
+constexpr char k_cl_platform[] = "Intel(R) OpenCL";
+constexpr char k_cl_device[] = "11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz";
 
 const char* const lookup_table[45] = {
     "\0",
@@ -76,6 +80,22 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     
+    std::cout << "Platform count:" << open_cl::Context::getPlatformCount() << "\nAvailable platforms:\n";
+    
+    for(auto plat : open_cl::Context::getAllPlatforms()) {
+        auto info = plat.getInfo<CL_PLATFORM_NAME>();
+        std::cout << info << "\n";
+        std::vector<cl::Device> all_devices;
+        plat.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+        
+        for(auto device : all_devices) {
+            auto info = device.getInfo<CL_DEVICE_NAME>();
+            std::cout << info << "\n";
+            std::vector<cl::Device> all_devices;
+        }
+    }
+    
+    // auto context = open_cl::Context::autoGenerate();
     auto start = std::chrono::high_resolution_clock::now();
     // Length of input
     codefile.seekg(0, codefile.end);
@@ -95,7 +115,22 @@ int main(int argc, char* argv[]) {
     c_code[inlength] = 0;
     auto createkernel = std::chrono::high_resolution_clock::now();
     // Create context and kernel
-    auto context = open_cl::Context::autoGenerate();
+    open_cl::Context context;
+    bool found = false;
+    found = context.selectPlatformByName(k_cl_platform);
+    
+    if(!found) {
+        std::cerr << "Could not find the platform specified platform.\n";
+        exit(1);
+    }
+    
+    found = context.selectDeviceByName(k_cl_device);
+    
+    if(!found) {
+        std::cerr << "Could not find the platform specified device.\n";
+        exit(1);
+    }
+    
     auto _lexer = lexer(context);
     // Copy string to kernel buffer
     _lexer.setInput(c_code, strlen(c_code) + 1);
@@ -163,5 +198,43 @@ int main(int argc, char* argv[]) {
     cl_helper::printTime("Reading from token buffer", _lexer.getReadTokenBufEvent());
     cl_helper::printTime("Reading from data buffer", _lexer.getReadDataBufEvent());
     cl_helper::printTime("Reading from return value", _lexer.getReadRetValEvent());
+    // Open output
+    std::ofstream data_file;
+    auto data_name = std::string(k_cl_platform).append(".csv");
+    
+    if(std::filesystem::exists(data_name)) {
+        data_file.open(data_name, std::ios_base::app);
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(readfile - start).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(createkernel - readfile).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(prekernel - createkernel).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(postkernel - prekernel).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(readkernel - postkernel).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(writefile - readkernel).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(writefile - start).count() << ",";
+        data_file << cl_helper::getTime(_lexer.getWriteStringBufEvent()) << ",";
+        data_file << cl_helper::getTime(_lexer.getWriteRetValEvent()) << ",";
+        data_file << cl_helper::getTime(_lexer.getRunEvent()) << ",";
+        data_file << cl_helper::getTime(_lexer.getReadTokenBufEvent()) << ",";
+        data_file << cl_helper::getTime(_lexer.getReadDataBufEvent()) << ",";
+        data_file << cl_helper::getTime(_lexer.getReadRetValEvent()) << "\n";
+    } else {
+        data_file.open(data_name);
+        data_file << "\"open file [us]\", \"Read input [us]\", \"create kernel [us]\", \"run entire kernel [us]\", \"read output [us]\", \"write file [us]\", \"execution time [us]\", \"Writing to string buffer [ns]\", \"Writing to return value [ns]\", \"Lexer [ns]\", \"Reading from token buffer [ns]\", \"Reading from data buffer [ns]\", \"Reading from return value [ns]\"\n";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(readfile - start).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(createkernel - readfile).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(prekernel - createkernel).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(postkernel - prekernel).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(readkernel - postkernel).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(writefile - readkernel).count() << ",";
+        data_file << std::chrono::duration_cast<std::chrono::microseconds>(writefile - start).count() << ",";
+        data_file << cl_helper::getTime(_lexer.getWriteStringBufEvent()) << ",";
+        data_file << cl_helper::getTime(_lexer.getWriteRetValEvent()) << ",";
+        data_file << cl_helper::getTime(_lexer.getRunEvent()) << ",";
+        data_file << cl_helper::getTime(_lexer.getReadTokenBufEvent()) << ",";
+        data_file << cl_helper::getTime(_lexer.getReadDataBufEvent()) << ",";
+        data_file << cl_helper::getTime(_lexer.getReadRetValEvent()) << "\n";
+    }
+    
+    data_file.close();
     return 0;
 }

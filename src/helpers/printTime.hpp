@@ -16,6 +16,12 @@ namespace cl_helper {
         std::cout << name << " ran in: " << minutes << " minutes, " << seconds << " seconds, " << millis << " milliseconds, " << micros << " microseconds, " << nanos << " nanoseconds\n";
         std::cout << "Total nanoseconds:\n" << nanosTotal << "\n";
     }
+    
+    inline unsigned long long getTime(const cl::Event& evt) {
+        auto start = evt.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+        auto end = evt.getProfilingInfo<CL_PROFILING_COMMAND_END>();
+        return end - start;
+    }
 }
 
 
