@@ -1,4 +1,4 @@
-"open file [us]", "Read input [us]", "create kernel [us]", "run entire kernel [us]", "read output [us]", "write file [us]", "execution time [us]", "Writing to string buffer [ns]", "Writing to return value [ns]", "Lexer [ns]", "Reading from token buffer [ns]", "Reading from data buffer [ns]", "Reading from return value [ns]"
+"open file [us]","Read input [us]","create kernel [us]","run entire kernel [us]","read output [us]","write file [us]","execution time [us]","Writing to string buffer [ns]","Writing to return value [ns]","Lexer [ns]","Reading from token buffer [ns]","Reading from data buffer [ns]","Reading from return value [ns]"
 61,181,220667,1870,0,3407,226188,33088,5120,753664,18336,16096,1152
 46,128,161350,2253,0,2461,166239,33760,1024,759808,20416,15552,1152
 69,110,146447,1997,0,3465,152090,37536,1024,741376,15776,15808,1152
