@@ -7,7 +7,8 @@
 #include "helpers/printTime.hpp"
 
 constexpr char k_cl_platform[] = "Intel(R) OpenCL";
-constexpr char k_cl_device[] = "11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz";
+// constexpr char k_cl_device[] = "8th Gen Intel(R) Core(TM) i7-8750 @ 2.20GHz";
+constexpr char k_cl_device[] = "Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz";
 
 const char* const lookup_table[45] = {
     "\0",
@@ -200,7 +201,7 @@ int main(int argc, char* argv[]) {
     cl_helper::printTime("Reading from return value", _lexer.getReadRetValEvent());
     // Open output
     std::ofstream data_file;
-    auto data_name = std::string(k_cl_platform).append(".csv");
+    auto data_name = std::string(k_cl_device).append("Map.csv");
     
     if(std::filesystem::exists(data_name)) {
         data_file.open(data_name, std::ios_base::app);

@@ -41,22 +41,32 @@ def read_csv(file, ret_titles=False):
 
 
 if __name__ == "__main__":
-    names = ("Intel Core i7-11800H (2.30GHz)", "Intel Core i7-11800H (2.30GHz) (Map)", "NVIDIA RTX 3060 (Laptop)")
-    opencl_intel_data, opencl_title, cpp_intel_data, cpp_titles, create_intel_data, create_title = read_csv("Intel(R) OpenCL.csv", True)
-    opencl_intel_map_data, cpp_intel_map_data, create_intel_map_data = read_csv("Intel(R) OpenCL Map.csv")
-    opencl_nvidia_data, cpp_nvidia_data, create_nvidia_data = read_csv("NVIDIA CUDA.csv")
+    names = ("Intel Core i7-8750H (2.2GHz)", "Intel Core i7-8750H (2.2GHz) (Map)", "Intel UHD Graphics 630", "Intel UHD Graphics 630 (Map)", "NVIDIA GTX 1050 (Laptop)", "NVIDIA GTX 1050 (Laptop) (Map)")
+    names = names[::2]
+    opencl_intel_data, opencl_title, cpp_intel_data, cpp_titles, create_intel_data, create_title = read_csv("Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz.csv", True)
+    # opencl_intel_map_data, cpp_intel_map_data, create_intel_map_data = read_csv("Intel(R) Core(TM) i7-8750H CPU @ 2.20GHzMap.csv")
+    opencl_intelG_data, cpp_intelG_data, create_intelG_data = read_csv("Intel(R) UHD Graphics 630.csv")
+    # opencl_intelG_map_data, cpp_intelG_map_data, create_intelG_map_data = read_csv("Intel(R) UHD Graphics 630Map.csv")
+    opencl_nvidia_data, cpp_nvidia_data, create_nvidia_data = read_csv("NVIDIA GeForce GTX 1050.csv")
+    # opencl_nvidia_map_data, cpp_nvidia_map_data, create_nvidia_map_data = read_csv("NVIDIA GeForce GTX 1050Map.csv")
     opencl_data = {}
     cpp_data = {}
     create_data = {}
+
+    print(opencl_intel_data)
+    # print(opencl_intel_map_data)
     
     for i, item in enumerate(opencl_title):
-        opencl_data[item] = np.array([opencl_intel_data[i], opencl_intel_map_data[i], opencl_nvidia_data[i]])
+        # opencl_data[item] = np.array([opencl_intel_data[i], opencl_intel_map_data[i], opencl_intelG_data[i], opencl_intelG_map_data[i], opencl_nvidia_data[i], opencl_nvidia_map_data[i]])
+        opencl_data[item] = np.array([opencl_intel_data[i], opencl_intelG_data[i], opencl_nvidia_data[i]])
 
     for i, item in enumerate(cpp_titles):
-        cpp_data[item] = np.array([cpp_intel_data[i], cpp_intel_map_data[i], cpp_nvidia_data[i]])
+        # cpp_data[item] = np.array([cpp_intel_data[i], cpp_intel_map_data[i], cpp_intelG_data[i], cpp_intelG_map_data[i], cpp_nvidia_data[i], cpp_nvidia_map_data[i]])
+        cpp_data[item] = np.array([cpp_intel_data[i], cpp_intelG_data[i], cpp_nvidia_data[i]])
 
     create_data = cpp_data.copy()
-    create_data[create_title] = np.array([create_intel_data, create_intel_map_data, create_nvidia_data])
+    # create_data[create_title] = np.array([create_intel_data, create_intel_map_data, create_intelG_data, create_intelG_map_data, create_nvidia_data, create_nvidia_map_data])
+    create_data[create_title] = np.array([create_intel_data, create_intelG_data, create_nvidia_data])
 
     
     fig, ax = plt.subplots()
@@ -76,7 +86,7 @@ if __name__ == "__main__":
 
     plt.xticks(rotation="vertical")
 
-    plt.savefig("exe_time.png", bbox_inches="tight")
+    plt.savefig("exe_shit_time.pdf", bbox_inches="tight")
 
 
     fig, ax = plt.subplots()
@@ -96,7 +106,7 @@ if __name__ == "__main__":
 
     plt.xticks(rotation="vertical")
 
-    plt.savefig("exe_time_no_create.png", bbox_inches="tight")
+    plt.savefig("exe_shit_time_no_create.pdf", bbox_inches="tight")
 
     fig, ax = plt.subplots()
     bottom = np.zeros(3)
@@ -115,4 +125,4 @@ if __name__ == "__main__":
 
     plt.xticks(rotation="vertical")
 
-    plt.savefig("exe_time_opencl.png", bbox_inches="tight")
+    plt.savefig("exe_shit_time_opencl.pdf", bbox_inches="tight")
