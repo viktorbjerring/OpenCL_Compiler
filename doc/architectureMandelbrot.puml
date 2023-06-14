@@ -1,0 +1,30 @@
+@startuml
+
+package open_cl {
+    class context
+    class program
+}
+
+class mandelbrot
+package "OpenCL Device" <<Rectangle>> {
+class "mandelbrot" as mandelbrotKernel << (K,#FF7700) >>
+class generate_row_histogram << (K,#FF7700) >>
+class consolidate_histogram << (K,#FF7700) >>
+class apply_histogram_data << (K,#FF7700) >>
+class normalize_data << (K,#FF7700) >>
+class apply_basic_palette << (K,#FF7700) >>
+class apply_lch_palette << (K,#FF7700) >>
+}
+
+mandelbrot -up-> context
+mandelbrot -up-> program
+mandelbrot --> mandelbrotKernel
+mandelbrot --> generate_row_histogram
+mandelbrot --> consolidate_histogram
+mandelbrot --> apply_histogram_data
+mandelbrot --> normalize_data
+mandelbrot --> apply_basic_palette
+mandelbrot --> apply_lch_palette
+
+hide members
+@enduml

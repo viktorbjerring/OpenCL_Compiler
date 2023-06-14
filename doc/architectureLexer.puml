@@ -5,14 +5,14 @@ package open_cl {
     class program
 }
 
-class Invoker
+class lexer
 package "OpenCL Device" <<Rectangle>> {
-class Kernel << (K,#FF7700) >>
+class "lexer" as lexerKernel << (K,#FF7700) >> 
 }
 
-Invoker --> Kernel
-Invoker -up-> context
-Invoker -up-> program
+lexer --> lexerKernel
+lexer -up-> context
+lexer -up-> program
 
 hide members
 
