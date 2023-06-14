@@ -41,88 +41,122 @@ def read_csv(file, ret_titles=False):
 
 
 if __name__ == "__main__":
-    names = ("Intel Core i7-8750H (2.2GHz)", "Intel Core i7-8750H (2.2GHz) (Map)", "Intel UHD Graphics 630", "Intel UHD Graphics 630 (Map)", "NVIDIA GTX 1050 (Laptop)", "NVIDIA GTX 1050 (Laptop) (Map)")
-    names = names[::2]
+    names = ("Intel Core i7-8750H (2.2GHz)", "Intel Core i7-11800H (2.30GHz)", "Intel UHD Graphics 630", "Intel Core i7-11800H (2.30GHz) (Map)", "NVIDIA GTX 1050 (Laptop)", "NVIDIA RTX 3060 (Laptop)")
+    names_a = names[::2]
+    names_b = names[1::2]
     opencl_intel_data, opencl_title, cpp_intel_data, cpp_titles, create_intel_data, create_title = read_csv("Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz.csv", True)
-    # opencl_intel_map_data, cpp_intel_map_data, create_intel_map_data = read_csv("Intel(R) Core(TM) i7-8750H CPU @ 2.20GHzMap.csv")
+    opencl_intel_map_data, cpp_intel_map_data, create_intel_map_data = read_csv("Intel(R) OpenCL.csv")
     opencl_intelG_data, cpp_intelG_data, create_intelG_data = read_csv("Intel(R) UHD Graphics 630.csv")
-    # opencl_intelG_map_data, cpp_intelG_map_data, create_intelG_map_data = read_csv("Intel(R) UHD Graphics 630Map.csv")
+    opencl_intelG_map_data, cpp_intelG_map_data, create_intelG_map_data = read_csv("Intel(R) OpenCL Map.csv")
     opencl_nvidia_data, cpp_nvidia_data, create_nvidia_data = read_csv("NVIDIA GeForce GTX 1050.csv")
-    # opencl_nvidia_map_data, cpp_nvidia_map_data, create_nvidia_map_data = read_csv("NVIDIA GeForce GTX 1050Map.csv")
-    opencl_data = {}
-    cpp_data = {}
-    create_data = {}
+    opencl_nvidia_map_data, cpp_nvidia_map_data, create_nvidia_map_data = read_csv("NVIDIA CUDA.csv")
+    opencl_data_a = {}
+    opencl_data_b = {}
+    cpp_data_a = {}
+    cpp_data_b = {}
+    create_data_a = {}
+    create_data_b = {}
 
     print(opencl_intel_data)
     # print(opencl_intel_map_data)
     
     for i, item in enumerate(opencl_title):
-        # opencl_data[item] = np.array([opencl_intel_data[i], opencl_intel_map_data[i], opencl_intelG_data[i], opencl_intelG_map_data[i], opencl_nvidia_data[i], opencl_nvidia_map_data[i]])
-        opencl_data[item] = np.array([opencl_intel_data[i], opencl_intelG_data[i], opencl_nvidia_data[i]])
+        item = item.capitalize()
+        opencl_data_a[item] = np.array([opencl_intel_data[i], opencl_intelG_data[i], opencl_nvidia_data[i]])
+        opencl_data_b[item] = np.array([opencl_intel_map_data[i], opencl_intelG_map_data[i], opencl_nvidia_map_data[i]])
 
     for i, item in enumerate(cpp_titles):
-        # cpp_data[item] = np.array([cpp_intel_data[i], cpp_intel_map_data[i], cpp_intelG_data[i], cpp_intelG_map_data[i], cpp_nvidia_data[i], cpp_nvidia_map_data[i]])
-        cpp_data[item] = np.array([cpp_intel_data[i], cpp_intelG_data[i], cpp_nvidia_data[i]])
+        item = item.capitalize()
+        cpp_data_a[item] = np.array([cpp_intel_data[i], cpp_intelG_data[i], cpp_nvidia_data[i]])
+        cpp_data_b[item] = np.array([cpp_intel_map_data[i], cpp_intelG_map_data[i], cpp_nvidia_map_data[i]])
 
-    create_data = cpp_data.copy()
+    create_data_a = cpp_data_a.copy()
+    create_data_b = cpp_data_b.copy()
     # create_data[create_title] = np.array([create_intel_data, create_intel_map_data, create_intelG_data, create_intelG_map_data, create_nvidia_data, create_nvidia_map_data])
-    create_data[create_title] = np.array([create_intel_data, create_intelG_data, create_nvidia_data])
+    create_data_a[create_title.capitalize()] = np.array([create_intel_data, create_intelG_data, create_nvidia_data])
+    create_data_b[create_title.capitalize()] = np.array([create_intel_map_data, create_intelG_map_data, create_nvidia_map_data])
 
     
-    fig, ax = plt.subplots()
+    fig, (ax1, ax2) = plt.subplots(1, 2)
     bottom = np.zeros(3)
 
     width = 0.5
 
-    for label, data_count in create_data.items():
+    for label, data_count in create_data_b.items():
         print(f"{label}: {data_count}")
-        p = ax.bar(names, data_count, width, label=label, bottom=bottom)
+        p = ax1.bar(names_b, data_count, width, label=label, bottom=bottom)
         bottom += data_count
 
-    ax.set_title("Time to execute, separated into segments")
-    ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
+    bottom = np.zeros(3)
+    for label, data_count in create_data_a.items():
+        print(f"{label}: {data_count}")
+        p = ax2.bar(names_a, data_count, width, label=label, bottom=bottom)
+        bottom += data_count
 
-    ax.set_ylabel("Execution time [ms]")
+    ax2.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
+    ax1.set_ylabel("Execution time [ms]")
 
-    plt.xticks(rotation="vertical")
+    ax1.tick_params(axis='x', labelrotation=270)
+    ax2.tick_params(axis='x', labelrotation=270)
+    fig.align_xlabels()
+
+    plt.title("Time to execute, separated into segments")
+    # plt.xticks(rotation="vertical")
 
     plt.savefig("exe_shit_time.pdf", bbox_inches="tight")
 
-
-    fig, ax = plt.subplots()
+    fig, (ax1, ax2) = plt.subplots(1, 2)
     bottom = np.zeros(3)
 
     width = 0.5
 
-    for label, data_count in cpp_data.items():
+    for label, data_count in cpp_data_b.items():
         print(f"{label}: {data_count}")
-        p = ax.bar(names, data_count, width, label=label, bottom=bottom)
+        p = ax1.bar(names_b, data_count, width, label=label, bottom=bottom)
         bottom += data_count
 
-    ax.set_title("Time to execute separated into segments (Excluding create kernel)")
-    ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
+    bottom = np.zeros(3)
+    for label, data_count in cpp_data_a.items():
+        print(f"{label}: {data_count}")
+        p = ax2.bar(names_a, data_count, width, label=label, bottom=bottom)
+        bottom += data_count
 
-    ax.set_ylabel("Execution time [ms]")
+    ax2.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
+    ax1.set_ylabel("Execution time [ms]")
 
-    plt.xticks(rotation="vertical")
+    ax1.tick_params(axis='x', labelrotation=270)
+    ax2.tick_params(axis='x', labelrotation=270)
+    fig.align_xlabels()
 
-    plt.savefig("exe_shit_time_no_create.pdf", bbox_inches="tight")
+    plt.title("Time to execute, separated into segments (Excluding create kernel)")
+    # plt.xticks(rotation="vertical")
 
-    fig, ax = plt.subplots()
+    plt.savefig("exe_shit_time_no_kernel.pdf", bbox_inches="tight")
+
+    fig, (ax1, ax2) = plt.subplots(1, 2)
     bottom = np.zeros(3)
 
     width = 0.5
 
-    for label, data_count in opencl_data.items():
+    for label, data_count in opencl_data_b.items():
         print(f"{label}: {data_count}")
-        p = ax.bar(names, data_count, width, label=label, bottom=bottom)
+        p = ax1.bar(names_b, data_count, width, label=label, bottom=bottom)
         bottom += data_count
 
-    ax.set_title("Time to execute kernel, seperated into segments")
-    ax.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
+    bottom = np.zeros(3)
+    for label, data_count in opencl_data_a.items():
+        print(f"{label}: {data_count}")
+        p = ax2.bar(names_a, data_count, width, label=label, bottom=bottom)
+        bottom += data_count
 
-    ax.set_ylabel("Execution time [us]")
+    ax2.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
+    ax1.set_ylabel("Execution time [us]")
 
-    plt.xticks(rotation="vertical")
+    ax1.tick_params(axis='x', labelrotation=270)
+    ax2.tick_params(axis='x', labelrotation=270)
+    fig.align_xlabels()
 
-    plt.savefig("exe_shit_time_opencl.pdf", bbox_inches="tight")
+    plt.title("Time to execute kernel, separated into segments")
+    # plt.xticks(rotation="vertical")
+
+    plt.savefig("exe_shit_time_kernel.pdf", bbox_inches="tight")
