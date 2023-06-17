@@ -1,8 +1,14 @@
 {
-  "configurations": [
-    {
-      "includePath": ["${myDefaultIncludePath}", "/vcpkg/installed/x64-windows/include/*", "/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.8/include/*", "src/*"]
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "includePath": [
+                "${myDefaultIncludePath}",
+                "/vcpkg/installed/x64-windows/include/*",
+                "/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.8/include/*",
+                "src/*"
+            ],
+            "configurationProvider": "ms-vscode.makefile-tools"
+        }
+    ],
+    "version": 4
 }

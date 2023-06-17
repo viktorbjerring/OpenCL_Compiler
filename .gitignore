@@ -32,5 +32,8 @@
 *.app
 
 build/*
+**/build/*
 src/build/*
 Data/*.pdf
+.vscode/**
+.vscode/c_cpp_properties.json
