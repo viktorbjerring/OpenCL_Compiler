@@ -3,11 +3,21 @@
 #include <chrono>
 #include <filesystem>
 #include "openCL/context.hpp"
-#include "OpenCl_compiler/lexerMap.hpp"
 #include "helpers/printTime.hpp"
 
+#ifdef USE_MAP
+#include "OpenCl_compiler/lexerMap.hpp"
+#else
+#include "OpenCl_compiler/lexer.hpp"
+#endif
+
+#ifdef USE_XILINX
+#define KERNEL_FILE "lexer_xilinx.cl"
+#else
+#define KERNEL_FILE "lexer.cl"
+#endif
+
 constexpr char k_cl_platform[] = "Intel(R) OpenCL";
-// constexpr char k_cl_device[] = "8th Gen Intel(R) Core(TM) i7-8750 @ 2.20GHz";
 constexpr char k_cl_device[] = "Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz";
 
 const char* const lookup_table[45] = {
@@ -64,51 +74,51 @@ int main(int argc, char* argv[]) {
         std::cout << "Please enter valid args.\nUsage: [inputfile] [outputfile]" << std::endl;
         return -1;
     }
-    
+
     // Open input
     std::ifstream codefile(argv[1]);
-    
+
     if(!codefile.is_open()) {
         std::cout << "Error in opening input file" << std::endl;
         return -1;
     }
-    
+
     // Open output
     std::ofstream lexfile(argv[2]);
-    
+
     if(!lexfile.is_open()) {
         std::cout << "Error in opening output file" << std::endl;
         return -1;
     }
-    
+
     std::cout << "Platform count:" << open_cl::Context::getPlatformCount() << "\nAvailable platforms:\n";
-    
+
     for(auto plat : open_cl::Context::getAllPlatforms()) {
         auto info = plat.getInfo<CL_PLATFORM_NAME>();
         std::cout << info << "\n";
         std::vector<cl::Device> all_devices;
         plat.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
-        
+
         for(auto device : all_devices) {
             auto info = device.getInfo<CL_DEVICE_NAME>();
             std::cout << info << "\n";
             std::vector<cl::Device> all_devices;
         }
     }
-    
+
     // auto context = open_cl::Context::autoGenerate();
     auto start = std::chrono::high_resolution_clock::now();
     // Length of input
     codefile.seekg(0, codefile.end);
     int inlength = codefile.tellg();
     codefile.seekg(0, codefile.beg);
-    
+
     // Check length is ok
     if(inlength >= STRING_LENGTH) {
         std::cout << "Input too long :(\nMax length: " << STRING_LENGTH << "\nCurrent length: " << inlength << std::endl;
         return -1;
     }
-    
+
     auto readfile = std::chrono::high_resolution_clock::now();
     // Read input
     char* c_code = new char[inlength + 1];
@@ -119,19 +129,19 @@ int main(int argc, char* argv[]) {
     open_cl::Context context;
     bool found = false;
     found = context.selectPlatformByName(k_cl_platform);
-    
+
     if(!found) {
         std::cerr << "Could not find the platform specified platform.\n";
         exit(1);
     }
-    
+
     found = context.selectDeviceByName(k_cl_device);
-    
+
     if(!found) {
         std::cerr << "Could not find the platform specified device.\n";
         exit(1);
     }
-    
+
     auto _lexer = lexer(context);
     // Copy string to kernel buffer
     _lexer.setInput(c_code, strlen(c_code) + 1);
@@ -139,14 +149,14 @@ int main(int argc, char* argv[]) {
     // Run kernel
     bool val = _lexer();
     auto postkernel = std::chrono::high_resolution_clock::now();
-    
+
     if(!val) {
         std::cout << "Error with kernel :(" << std::endl;
         return -1;
     }
-    
+
     int* ret = _lexer.getRetVal();
-    
+
     if(*(ret) == -1) {
         std::cout << "No of tokens exceed buffer size :(" << std::endl;
         return -1;
@@ -154,37 +164,37 @@ int main(int argc, char* argv[]) {
         std::cout << "No of data exceed buffer size :(" << std::endl;
         return -1;
     }
-    
+
     // Get data from kernel
     char* tok = _lexer.getTokens();
     char* dat = _lexer.getData();
     auto readkernel = std::chrono::high_resolution_clock::now();
     int tokIdx = 0;
     int datIdx = 0;
-    
+
     // Printing loop
     while(tok[tokIdx] != 0) {
         if(tok[tokIdx] >= 1 && tok[tokIdx] <= 44) {
             lexfile << tokIdx << ':' << lookup_table[tok[tokIdx]];
-            
+
             if(tok[tokIdx] >= 42) {
                 lexfile << "[";
-                
+
                 while(dat[datIdx] != '\0') {
                     lexfile << dat[datIdx++];
                 }
-                
+
                 datIdx++;
                 lexfile << "]";
             }
         } else {
             lexfile << "UNK TOKEN: " << +tok[tokIdx];
         }
-        
+
         lexfile << std::endl;
         tokIdx++;
     }
-    
+
     auto writefile = std::chrono::high_resolution_clock::now();
     std::cout << "Time to open file: " << std::chrono::duration_cast<std::chrono::microseconds>(readfile - start).count() << " microseconds" << std::endl;
     std::cout << "Time to read input: " << std::chrono::duration_cast<std::chrono::microseconds>(createkernel - readfile).count() << " microseconds" <<  std::endl;
@@ -202,7 +212,7 @@ int main(int argc, char* argv[]) {
     // Open output
     std::ofstream data_file;
     auto data_name = std::string(k_cl_device).append("Map.csv");
-    
+
     if(std::filesystem::exists(data_name)) {
         data_file.open(data_name, std::ios_base::app);
         data_file << std::chrono::duration_cast<std::chrono::microseconds>(readfile - start).count() << ",";
@@ -235,7 +245,7 @@ int main(int argc, char* argv[]) {
         data_file << cl_helper::getTime(_lexer.getReadDataBufEvent()) << ",";
         data_file << cl_helper::getTime(_lexer.getReadRetValEvent()) << "\n";
     }
-    
+
     data_file.close();
     return 0;
 }
