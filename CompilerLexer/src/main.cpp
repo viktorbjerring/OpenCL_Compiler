@@ -196,6 +196,15 @@ int main(int argc, char* argv[]) {
     }
 
     auto writefile = std::chrono::high_resolution_clock::now();
+
+
+    std::cout << "Outfile position: " << lexfile.tellp() << std::endl;
+
+    if (lexfile.tellp() == 0) {
+        std::cout << "No data in output file - check input for errors" << std::endl;
+        return -1;
+    }
+
     std::cout << "Time to open file: " << std::chrono::duration_cast<std::chrono::microseconds>(readfile - start).count() << " microseconds" << std::endl;
     std::cout << "Time to read input: " << std::chrono::duration_cast<std::chrono::microseconds>(createkernel - readfile).count() << " microseconds" <<  std::endl;
     std::cout << "Time to create kernel: " << std::chrono::duration_cast<std::chrono::microseconds>(prekernel - createkernel).count() << " microseconds" <<  std::endl;
