@@ -34,3 +34,5 @@
 build/*
 src/build/*
 Data/*.pdf
+
+out/*
