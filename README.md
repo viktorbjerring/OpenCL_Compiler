@@ -1,4 +1,4 @@
-# psychic-system
+# OpenCL Compiler
 
 This repository is covering the research and development project made with Aarhus University, and is an experiment into using OpenCL to use hardware acceleration for compilation. 
 
